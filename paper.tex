@@ -1,0 +1,306 @@
+\documentclass{sumiilab-paper}
+%% uplatex を使う場合：
+% \documentclass[uplatex]{sumiilab-paper}
+\usepackage{amsmath,amssymb,amsfonts,ascmac,cases,bm}
+\usepackage{cite}
+\usepackage{enumitem}
+\usepackage{bussproofs}
+
+%% ===============================================
+%% 論文の表紙に表示される情報
+%% ===============================================
+
+% 論文の年度と種類
+\paper{平成 n 年度 卒業論文}% 学部生
+%\paper{平成 n 年度 修士論文}% 修士
+
+% 論文のタイトル
+\title{住井研究室の\\ステキな論文クラスファイルの使用例}
+
+% 学籍番号と著者のお名前
+\author{X0XX1234 ラムダ 小太郎}
+
+% 著者の所属
+\institute{東北大学 工学部\\電気情報物理工学科}% 学部生
+%\institute{東北大学 大学院情報科学研究科\\情報基礎科学専攻}% 修士
+
+% 指導教員のお名前
+\supervisor{住井 英二郎 教授}% 指導教員
+\subsupervisor{松田 一孝 准教授}% 論文指導教員(省略可)
+
+% 論文発表日時
+\date{平成 n 年1月1日 \quad 23:00--23:30}
+% 発表場所
+\venue{電子情報システム・応物系1号館2階トイレ}
+
+%% ===============================================
+%% ソースコードの設定
+%% ===============================================
+
+% プログラミング言語と表示するフォント等の設定
+\lstset{
+  language={[Objective]Caml},% プログラミング言語
+  basicstyle={\ttfamily\small},% ソースコードのテキストのスタイル
+  keywordstyle={\bfseries},% 予約語等のキーワードのスタイル
+  commentstyle={},% コメントのスタイル
+  stringstyle={},% 文字列のスタイル
+  frame=trlb,% ソースコードの枠線の設定 (none だと非表示)
+  numbers=left,% 行番号の表示 (none だと非表示)
+  numberstyle={\footnotesize},% 行番号のスタイル
+  xleftmargin=15pt,% 左余白
+  xrightmargin=5pt,% 右余白
+  keepspaces=true,% 空白を維持する
+  mathescape,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
+  % 手動強調表示の設定
+  moredelim=[is][\bfseries]{@*}{*@},
+  moredelim=[is][\itshape]{@/}{/@}
+}
+
+%% ===============================================
+%% 論文中で使う記号とかのマクロ定義
+%% ===============================================
+
+%% 論文中で繰り返し使う記号は次のように「マクロ」として実装しておくと良い。
+%% TeX ソース中で \BOOL と書くと、\texttt{Bool} に置き換えてくれる。
+%% フォントを変え忘れたりするリスクが減るし、あとから記号を変更するのも楽になる。
+
+\newcommand{\keyword}[1]{\mathbf{#1}}
+\newcommand{\BOOL}{\keyword{Bool}}
+\newcommand{\TRUE}{\keyword{true}}
+\newcommand{\FALSE}{\keyword{false}}
+\newcommand{\IF}{\keyword{if}}
+\newcommand{\THEN}{\keyword{then}}
+\newcommand{\ELSE}{\keyword{else}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+ステキな論文の概要
+\end{abstract}
+
+\chapter*{謝辞}
+
+ステキな論文の謝辞
+
+%% 目次
+\tableofcontents
+
+%% ここから本文
+
+\chapter{序論}
+
+%% 参考文献は \cite{ID} とします（ID は refs.bib 内で文献につけた識別子）
+%% BibTeX の使い方などは各自調べて下さい。
+序論とか本論とか結論とか \cite{Pierce:TypeSystems}
+
+\chapter{本論}
+
+\section{BNF の書き方の例}
+
+本節では、BNF によるプログラミング言語の構文の書き方を紹介する。
+構文木の書き方は一つというわけではないので、幾つかのバリエーションを紹介する。
+どの方法が良いと思うかは、個人の好みに依るところなので、好きなものを使えば良いと思う。
+
+まず、次の方法では、array 環境を使って、BNF を書いている。
+array 環境は数式環境中で表のようなものを書くときに使う。
+基本的に、table 環境と使い方は同じである。
+\[
+%% 空白を明示的に開けるときは "\," "\ " "~" "\quad" "\qquad" などを使う。
+%% 空白の幅は "\qquad" > "\quad" > "~" = "\ " > "\," の順で大きい。
+%% "~" と "\ " は空白の代わりに改行を許すかどうかの違い（"\ " だと改行される可能性がある）
+\begin{array}{rl@{\qquad\qquad}r}
+  t ::=
+  & & \mbox{terms:} \\
+  & x & \mbox{variables} \\
+  & \lambda x.~t & \mbox{lambda abstraction} \\
+  & t_1~t_2 & \mbox{application} \\
+  & \TRUE & \mbox{true} \\
+  & \FALSE & \mbox{false} \\
+  & \IF~t_1~\THEN~t_2~\ELSE~t_3 & \mbox{if statement}
+\end{array}
+\]
+
+他にも、次のように、align 環境を使っても、似たようなものを書くことができる。
+\begin{align}
+  t ::=
+  & \tag*{terms:} \\
+  & x \tag*{variables} \\
+  & \lambda x.~t \tag*{lambda abstraction} \\
+  & t_1~t_2 \tag*{application} \\
+  & \TRUE \tag*{true} \\
+  & \FALSE \tag*{false} \\
+  & \IF~t_1~\THEN~t_2~\ELSE~t_3 \tag*{if statement}
+\end{align}
+array 環境を愚直に使う場合と比べて、式が中央揃えになるという点と、
+``variables'' とかの説明が右端に来ている点が違う。
+説明は tag* マクロで出しており、これはもともと式番号を指定するためのものなので、
+若干使い方がおかしい気もするが、まぁ、いいだろう。
+自分の好みの方を使うと良いだろう。
+
+BNF 全体を左揃えにしたいならば、次のように、flalign 環境を使うと良い。
+align 環境と違って、\verb|&| を余分に1つ付ける必要がある、ということに注意して欲しい（詳しくはソースコードを見よ）。
+\begin{flalign}
+  t ::=
+  & & \tag*{terms:} \\ % & を余分に1つ付けること！
+  & x \tag*{variables} \\
+  & \lambda x.~t \tag*{lambda abstraction} \\
+  & t_1~t_2 \tag*{application} \\
+  & \TRUE \tag*{true} \\
+  & \FALSE \tag*{false} \\
+  & \IF~t_1~\THEN~t_2~\ELSE~t_3 \tag*{if statement}
+\end{flalign}
+
+\section{導出木の書き方の例}
+
+導出木の書き方も色々あるが、ここでは、bussproofs.sty を使った方法を紹介する。
+導出木は、手書きでも書きにくいが、\LaTeX だから書きやすいというわけでもなく、
+（使うパッケージにも依るが）そこそこの苦労は必要である。
+bussproofs.sty を除く多くの方法では、frac などをベースに「分数」で導出木を書く。
+bussproofs.sty はこれらとは全く異なるインタフェースであり、慣れれば比較的解りやすい。
+bussproofs.sty の動作は、（導出木を要素とする）スタックをイメージすると解りやすい。
+よく使うマクロは次の通り。
+\begin{itemize}
+\item \lstinline|\AxiomC{...}|：Axiom を push する（導出木では葉に相当）
+\item \lstinline|\UnaryInfC{...}|：スタックから部分導出木（仮定）を1つ pop して、
+  それを新たに作ったノード（結論）の子供にすることで、新たな部分導出木を作成し、push する。
+\item \lstinline|\BinaryInfC{...}|：スタックから部分導出木（仮定）を2つ pop して、
+  \lstinline|\UnaryInfC| と同様の動作を行う。
+\item \lstinline|\TrinaryInfC{...}|：スタックから部分導出木（仮定）を3つ pop して、
+  \lstinline|\UnaryInfC| と同様の動作を行う。
+\end{itemize}
+
+実際の使い方は以下の通り。
+
+%% T-Var
+\begin{prooftree}
+  \AxiomC{$x:T \in \Gamma$}
+  \RightLabel{\textsc{T-Var}}
+  \UnaryInfC{$\Gamma \vdash x : T$}
+\end{prooftree}
+%% T-Abs
+\begin{prooftree}
+  \AxiomC{$\Gamma, x:T \vdash t : U$}
+  \RightLabel{\textsc{T-Abs}}
+  \UnaryInfC{$\Gamma \vdash \lambda x.~t : T \to U$}
+\end{prooftree}
+%% T-App
+\begin{prooftree}
+  \AxiomC{$\Gamma \vdash t_1 : T \to U$}
+  \AxiomC{$\Gamma \vdash t_2 : T$}
+  \RightLabel{\textsc{T-App}}
+  \BinaryInfC{$\Gamma \vdash t_1~t_2 : U$}
+\end{prooftree}
+
+\begin{prooftree}
+  \AxiomC{}
+  \RightLabel{\textsc{T-True}}
+  \UnaryInfC{$x : \BOOL \to \BOOL \vdash \TRUE : \BOOL$}
+  \RightLabel{\textsc{T-Abs}}
+  \UnaryInfC{$\vdash \lambda x.~\TRUE : (\BOOL \to \BOOL) \to \BOOL$}
+  \AxiomC{$y : \BOOL \in y : \BOOL$}
+  \RightLabel{\textsc{T-Var}}
+  \UnaryInfC{$y : \BOOL \vdash y : \BOOL$}
+  \RightLabel{\textsc{T-Abs}}
+  \UnaryInfC{$\vdash \lambda y.~y : \BOOL \to \BOOL$}
+  \RightLabel{\textsc{T-App}}
+  \BinaryInfC{$\vdash (\lambda x.~\TRUE)~(\lambda y.~y) : \BOOL$}
+\end{prooftree}
+
+\section{定理環境}
+
+この論文クラスファイルでは、デフォルトで以下の定理環境を提供している。
+
+\begin{theorem}[定理のタイトル]
+  定理の内容
+\end{theorem}
+
+\begin{lemma}[補題のタイトル]
+  補題の内容
+\end{lemma}
+
+\begin{corollary}[系のタイトル]
+  系の内容
+\end{corollary}
+
+\begin{proposition}[命題のタイトル]
+  命題の内容
+\end{proposition}
+
+\begin{definition}[定義のタイトル]
+  定義の内容
+\end{definition}
+
+\begin{example}[例のタイトル]
+  例の内容
+\end{example}
+
+\begin{assumption}[仮定のタイトル]
+  仮定の内容
+\end{assumption}
+
+\begin{axiom}[公理のタイトル]
+  公理の内容
+\end{axiom}
+
+\begin{proof}[証明のタイトル]
+  証明の内容 \qed
+\end{proof}
+
+\begin{proof*}[証明のタイトル]
+  証明の内容（番号なしの証明環境。証明を \lstinline|\ref| で参照する必要がないなら、こっちを使うほうが自然かも） \qed
+\end{proof*}
+
+\subsection{定理環境の使い方の例}
+
+\begin{lemma}
+  \label{lem:interesting-lemma}
+  論文の中で最重要とは言えないような性質・命題は補題 (lamma) にする。
+  補題や定理から直ちに導けるような軽い命題は系 (corollary) にする（細かい使い分けは人による）。
+\end{lemma}
+
+\begin{proof*}
+  \lstinline|proof*| のように、アスタリスク付きの環境では、番号が付かない。
+\end{proof*}
+
+\begin{theorem}
+  \label{thm:wonderful-theorem}
+  提案手法の最も重要な性質や命題は、定理 (theorem) として書く。
+  読者の心をくすぐる興味深いステートメントを書こう。
+\end{theorem}
+
+\begin{proof*}
+  定理 \ref{thm:wonderful-theorem} の華麗な証明。その美しい証明に、読者の目は釘付けだ！
+  \begin{enumerate}[leftmargin=0pt,itemindent=*,label=Case \arabic*.]
+  \item 自明
+  \item 補題 \ref{lem:interesting-lemma} から直ちに導ける。
+  \item 言うまでもない。目を瞑れば証明が見えてくる。
+  \item あんまり自明じゃない
+    \begin{enumerate}[label=(\roman*)]
+    \item 自明じゃないと思ったけど、やっぱり自明だった
+    \item ほらね、こんなに簡単
+    \end{enumerate}
+  \end{enumerate}
+\end{proof*}
+
+\section{ソースコード}
+
+ソースコード\ref{src:listup_nodes}は二分木を深さ優先探索して、ノードを列挙する関数である。
+\begin{lstlisting}[caption=二分木のノードのリストアップ,label=src:listup_nodes]
+type 'a bin_tree =
+  | Leaf of 'a
+  | Node of 'a bin_tree * 'a bin_tree
+
+let rec listup_nodes = function
+  | Leaf x -> [x]
+  | Node (r, l) -> (listup_nodes r) @ (listup_nodes l)
+\end{lstlisting}
+ソースコードの書き方等については slide ブランチの slide.tex を参照されたし。
+
+\chapter{結論}
+
+%% 参考文献: bibtex
+\bibliographystyle{junsrt}
+\bibliography{refs}
+
+\end{document}

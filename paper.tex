@@ -5,6 +5,7 @@
 \usepackage{cite}
 \usepackage{enumitem}
 \usepackage{bussproofs}
+\usepackage{url}
 
 %% ===============================================
 %% 論文の表紙に表示される情報
@@ -99,7 +100,7 @@ PHOASやLocally nameless representationといった数多くの手法が考案�
 
 \chapter*{謝辞}
 
-ステキな論文の謝辞
+圧倒的感謝
 
 %% 目次
 \tableofcontents
@@ -111,10 +112,54 @@ PHOASやLocally nameless representationといった数多くの手法が考案�
 %% 参考文献は \cite{ID} とします（ID は refs.bib 内で文献につけた識別子）
 %% BibTeX の使い方などは各自調べて下さい。
 
-PentiumのFDIVバグをはじめとして，プログラムのバグが大きな社会的損失をもたらした事例は枚挙に暇がない．
-東証のシステムの不具合で株式の誤発注を取り消せず，みずほ銀行が多額の損失を被った事件などは記憶に新しい．
+PentiumのFDIVバグ\cite{PataHene}をはじめとして，プログラムのバグが大きな社会的損失をもたらした事例は枚挙に暇がない．
+東証のシステムの不具合で株式の誤発注を取り消せず，みずほ銀行が多額の損失を被った事件\cite{NikkeiBP:J-COM}などは記憶に新しい．
+特に，コンパイラはプログラムを生成するためのプログラム，言わばmother machineのようなものであるから，尚更バグの無い事が求められる．
+機械の精度は用いた工作機械の精度に依存するように，コンパイラにバグがあれば元のソースコードが正しくても誤ったコードが生成されてしまう．
 
-% 序論とか本論とか結論とか \cite{Pierce:TypeSystems}
+このような理由からコンパイラを形式的に検証する意義は大きい．
+同様の試みにはC言語を対象言語としたCompCert\cite{2006-Leroy-Blazy-Dargaye}や，
+例外及び参照も含む関数型言語を対象言語とした\cite{ImpurePOPL10}などがあるが，
+本研究で検証するMinCaml\cite{DBLP:conf/icfp/Sumii05}の対象言語には以下のような特徴がある．
+\begin{itemize}
+	\item 非純粋な関数型言語である
+	\item 外部関数の呼び出しや外部の配列へのアクセスができる
+	\item タプルや複数引数の関数といった可変個の要素を持つ構文がある
+\end{itemize}
+これらの特徴をを踏まえて、\ref{chapter:semantics}章では定理証明支援系を用いた形式的検証に適した意味論を定義する。
+
+
+\chapter{MinCaml}
+
+\section{K正規形}
+
+
+\chapter{束縛の表現}
+
+\section{名前による表現}
+
+\section{de Bruijn indices}
+
+\section{Parametric higher-order abstract syntax(PHOAS)}
+
+\section{Locally nameless representation}
+
+
+\chapter{意味論の定義}\label{chapter:semantics}
+
+\section{小ステップ意味論}
+
+\section{大ステップ意味論}
+
+\subsection{Coinductive big-step operational semantics}
+
+
+\chapter{Coqによる形式的検証}
+
+\section{小ステップ意味論による定式化}
+
+\section{Coinductive big-step operational semanticによる定式化}
+
 
 \chapter{本論}
 

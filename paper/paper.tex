@@ -80,15 +80,16 @@
 本論文では定理証明支援系の一つであるCoqを用いた，
 教育用コンパイラMinCamlにおけるコンパイルステージの一つ，K正規化の形式的検証について述べる．
 コンパイラのバグは生成したコードに波及するため一層高品質なコードが求められるが，
-現実の処理系は複雑であり形式的に検証するのは困難である．
-MinCamlはOCamlで2000行程度の簡潔な実装であるが，その対象言語はMLの本質となる機能を多数有しており，
-現実の処理系を検証する上で良い指標になると考えられる．
+現実の処理系は複雑で規模が大きく，定理証明支援系を用いて形式的に検証するのは困難である．
+MinCamlはOCamlで2000行程度の簡潔な実装であるが，IO，配列，
+外部関数呼び出しといった実用されている関数型言語と共通する機能を有しているため，
+現実の処理系を検証する上で有効な知見が得られると期待される．
 
-それでもなお定理証明支援系を用いた検証としては大規模な事に変わりない上，
-コンパイラの検証には対象言語が拡張された場合に今までの証明全てが修正を迫られる等の困難がある．
-本研究では対象言語の意味論をCoinductive big-step operational semanticsを用いて定義し，
+それでもなお定理証明支援系を用いた検証は労力を要する上，
+特にコンパイラの検証には対象言語が拡張された場合に今までの証明全てが修正を迫られる困難がある．
+本研究ではこの負担を和らげるべく，対象言語の意味論をCoinductive big-step operational semanticsを用いて定義し，
 束縛をde Bruijn indicesを用いて表現する．
-これによって停止しないプログラムに対しても正当性を証明できるのみならず，小ステップ意味論を用いるより証明が簡潔となるほか，
+これによって小ステップ意味論を用いるより簡潔に停止しないプログラムに対して正当性を証明でき，
 PHOASやLocally namelessといった別の束縛の表現と比較して理論的な簡単さと証明の簡潔さを両立できる．
 これと併せてCoqの証明自動化に関する機能を用い，対象言語が拡張された場合に極力証明を修正しなくても良いようにする．
 \end{abstract}
@@ -120,7 +121,7 @@ loginをコンパイルする際にバックドアを仕込むようなコンパ
 MinCamlはOCamlで2000行程度と簡潔な実装であるが，
 定数畳み込みやデッドコード削除などの最適化も実装されており，
 camloptやgccに匹敵する高速なコードを生成できる実用的な処理系である．
-o
+
 その対象言語には以下のような特徴があり，現実のML処理系を検証する上で参考になると考えられる．
 \begin{itemize}
 	\item 非純粋な関数型言語である
@@ -129,40 +130,43 @@ o
 \end{itemize}
 
 \chapter{MinCaml}
-
+\section{対象言語}
 MinCamlの対象言語
 
-\section{K正規形}
+\section{内部設計}
+
+K正規化
+
+\chapter{準備}
+
+\section{束縛の表現}
+
+\subsection{名前による表現}
+
+\subsection{de Bruijn indices}
+
+\subsection{Parametric higher-order abstract syntax(PHOAS)}
+
+\subsection{Locally nameless representation}
 
 
-\chapter{束縛の表現}
+\section{意味論}\label{chapter:semantics}
 
-\section{名前による表現}
+\subsection{小ステップ意味論}
 
-\section{de Bruijn indices}
-
-\section{Parametric higher-order abstract syntax(PHOAS)}
-
-\section{Locally nameless representation}
-
-
-\chapter{意味論の定義}\label{chapter:semantics}
-
-\section{小ステップ意味論}
-
-\section{大ステップ意味論}
-
-\subsection{Coinductive big-step operational semantics}
+\subsection{大ステップ意味論}
 
 
 \chapter{Coqによる形式的検証}
 
-\section{小ステップ意味論による定式化}
+\section{意味論の定義}
+\section{K正規化の実装}
+\section{正当性の検証}
+\section{言語の拡張}
 
-\section{Coinductive big-step operational semanticによる定式化}
+\chapter{結論}
 
-
-\chapter{本論}
+\chapter{議論・関連研究}
 
 \section{BNF の書き方の例}
 

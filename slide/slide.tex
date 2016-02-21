@@ -123,7 +123,11 @@
 
 \begin{frame}
 	\frametitle{研究背景}
-	\Huge コンパイラのバグは伝播
+	\Huge コンパイラのバグは伝播 \\
+	\begin{itemize}
+		\item UNIX初期のバックドア
+	\end{itemize}
+
 % バグの恐ろしさについては皆さんご存知と思いますが、
 % コンパイラにバグがあると元のソースコードにバグが無くても誤ったバイナリが生成されてしまうので、
 % コンパイラのバグと言うものは特に恐ろしいです。
@@ -133,7 +137,13 @@
 \end{frame}
 
 \begin{frame}
+	\frametitle{研究背景}
 	\Huge 現実の処理系は複雑
+	\begin{tabular}{ll}
+		SML\# & 24万行 \\
+		OCaml & 34万行 
+	\end{tabular}
+	素朴な検証では破綻
 \end{frame}
 
 \section{MinCaml}

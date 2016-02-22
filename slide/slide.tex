@@ -131,7 +131,7 @@
 
 \begin{frame}
 	\frametitle{研究背景}
-	\Huge コンパイラのバグは伝播 \\
+	\LARGE コンパイラのバグは伝播 \\
 	\begin{itemize}
 		\item UNIX初期のバックドア
 	\end{itemize}
@@ -146,11 +146,15 @@
 
 \begin{frame}
 	\frametitle{研究背景}
-	\Huge 現実の処理系は複雑
+	\LARGE 現実の処理系は複雑 \\
+	{\Large
 	\begin{tabular}{ll}
-		SML\# & 24万行 \\
-		OCaml & 34万行 
-	\end{tabular}\\
+		GCC & 1500万行 \\
+		OCaml & 34万行 \\
+		SML\# & 24万行
+	\end{tabular}}
+	\\
+	\vfill
 	素朴な検証では破綻
 \end{frame}
 
@@ -181,13 +185,42 @@
 
 \begin{frame}
 	\frametitle{内部設計}
+	\begin{figure}[htb]
+		\centering
+		\includegraphics[width=12cm,clip]{mincaml.png}
+	\end{figure}
 \end{frame}
 
 \begin{frame}
-	\Huge K正規化
+	\frametitle{K正規化}
+	\LARGE 
+	全ての部分式に名前を付ける
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{center}
+				$a+b*c+d$
+			\end{center}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\begin{center}
+				\[
+					\begin{array}{l}
+						\LET~x = b * c~\IN \\
+						\LET~y = a + x~\IN \\
+						y + d
+					\end{array}
+				\]
+			\end{center}
+		\end{column}
+	\end{columns}
 \end{frame}
 
 \section{意味論の定義}
+
+\begin{frame}
+	\frametitle{大ステップ意味論}
+	\Huge 
+\end{frame}
 
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論}

@@ -105,6 +105,14 @@
   moredelim=[is][\color{DarkGreen}]{@g\{}{\}@},
 }
 
+\newcommand{\keyword}[1]{\mathbf{#1}}
+\newcommand{\LET}{\keyword{let}}
+\newcommand{\REC}{\keyword{rec}}
+\newcommand{\ARRAY}{\keyword{Array}}
+\newcommand{\CREATE}{\keyword{create}}
+\newcommand{\AND}{\keyword{and}}
+\newcommand{\IN}{\keyword{in}}
+
 %% ===============================================
 %% 本文
 %% ===============================================
@@ -142,7 +150,7 @@
 	\begin{tabular}{ll}
 		SML\# & 24万行 \\
 		OCaml & 34万行 
-	\end{tabular}
+	\end{tabular}\\
 	素朴な検証では破綻
 \end{frame}
 
@@ -155,6 +163,20 @@
 
 \begin{frame}
 	\frametitle{対象言語}
+	\Large
+\[
+\begin{array}{l}
+  M, N, e ::= \\
+	\qquad \qquad \vdots\\
+  \qquad \LET~\REC~x~y_1~\cdots~y_n=M~\AND~\cdots~\IN~N\\
+  \qquad M~N_1~\cdots~N_n\\
+  \qquad (M_1,~\cdots~,M_n)\\
+  \qquad \LET~(M_1,~\cdots~,M_n)=M~\IN~N\\
+  \qquad \ARRAY.\CREATE~M~N\\
+  \qquad M_1.(M_2)\\
+  \qquad M_1.(M_2)\leftarrow M_3\\
+\end{array}
+\]
 \end{frame}
 
 \begin{frame}
@@ -165,48 +187,14 @@
 	\Huge K正規化
 \end{frame}
 
-\section{準備}
-
-\subsection{束縛の表現}
-
-\begin{frame}
-	\frametitle{束縛の表現}
-\end{frame}
-
-\begin{frame}
-	\frametitle{名前による表現}
-\end{frame}
-
-\begin{frame}
-	\frametitle{de Bruijnインデックス}
-\end{frame}
-
-\begin{frame}
-	\frametitle{PHOAS}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Locally nameless representation}
-\end{frame}
-
-\subsection{意味論}
-
-\begin{frame}
-	\frametitle{小ステップ意味論}
-\end{frame}
-
-\begin{frame}
-	\frametitle{大ステップ意味論}
-\end{frame}
+\section{意味論の定義}
 
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論}
 \end{frame}
 
-\section{Coqによる形式的検証}
-
 \begin{frame}
-	\frametitle{意味論の定義}
+	\frametitle{余帰納的大ステップ意味論}
 \end{frame}
 
 \begin{frame}

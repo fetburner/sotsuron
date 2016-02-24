@@ -6,7 +6,9 @@
 \usepackage{pxjahyper}% しおりの文字化け対策 (なくても良い)
 \usepackage{amsmath,amssymb,amsfonts,amsthm,ascmac,cases,bm,pifont}
 \usepackage{graphicx}
+\usepackage{bussproofs}
 \usepackage{url}
+\usepackage{etex}
 
 % スライドのテーマ
 \usetheme{sumiilab}
@@ -119,6 +121,16 @@
 \begin{document}
 \frame[plain]{\titlepage}% タイトルページ
 
+\begin{frame}
+	\frametitle{研究概要}
+	\LARGE MinCamlのK正規化をCoqで検証
+	\begin{itemize}
+		\item 余帰納的意味論
+		\item ド・ブラン インデックス
+		\item 半自動証明
+	\end{itemize}
+\end{frame}
+
 \section*{アウトライン}
 
 % 目次を表示させる（section を表示し、subsection は隠す）
@@ -130,11 +142,24 @@
 \section{研究背景}
 
 \begin{frame}
-	\frametitle{研究背景}
-	\LARGE コンパイラのバグは伝播 \\
+	\frametitle{コンパイラのバグ}
+	\LARGE コンパイラのバグは伝播
+
 	\begin{itemize}
 		\item UNIX初期のバックドア
 	\end{itemize}
+
+	\vfill
+
+	{\Large
+	\begin{tabular}{ccccc}
+		\structure{正常なcc} & $\rightarrow$ & \alert{異常なcc} & & \\
+																				& & \invisible<-1>{$\downarrow$} & & \\
+		\structure{正常なlogin} & \invisible<-2>{$\rightarrow$} & \invisible<-1>{\alert{異常なcc}} & \invisible<-2>{$\rightarrow$} & \invisible<-2>{\alert{異常なlogin}}
+
+	\pause
+	\pause
+\end{tabular}}
 
 % バグの恐ろしさについては皆さんご存知と思いますが、
 % コンパイラにバグがあると元のソースコードにバグが無くても誤ったバイナリが生成されてしまうので、
@@ -145,15 +170,16 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{研究背景}
-	\LARGE 現実の処理系は複雑 \\
+	\frametitle{現実の処理系}
+	\LARGE 現実の処理系は複雑
+
 	{\Large
 	\begin{tabular}{ll}
-		GCC & 1500万行 \\
 		OCaml & 34万行 \\
-		SML\# & 24万行
+		SML\# & 24万行 \\
+		GCC & 1500万行
 	\end{tabular}}
-	\\
+
 	\vfill
 	素朴な検証では破綻
 \end{frame}
@@ -161,26 +187,32 @@
 \section{MinCaml}
 
 \begin{frame}
-	\frametitle{教育用コンパイラMinCaml}
-	\Huge 
+	\frametitle{MinCaml}
+	\LARGE 住井による教育用コンパイラ
+	\begin{itemize}
+		\item OCamlで2000行程度
+		\item 非純粋な関数型言語
+		\item 型推論
+		\item 定数畳み込み等の最適化
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
 	\frametitle{対象言語}
 	\Large
-\[
-\begin{array}{l}
-  M, N, e ::= \\
-	\qquad \qquad \vdots\\
-  \qquad \LET~\REC~x~y_1~\cdots~y_n=M~\AND~\cdots~\IN~N\\
-  \qquad M~N_1~\cdots~N_n\\
-  \qquad (M_1,~\cdots~,M_n)\\
-  \qquad \LET~(M_1,~\cdots~,M_n)=M~\IN~N\\
-  \qquad \ARRAY.\CREATE~M~N\\
-  \qquad M_1.(M_2)\\
-  \qquad M_1.(M_2)\leftarrow M_3\\
-\end{array}
-\]
+	\[
+	\begin{array}{l}
+		M, N, e ::= \\
+		\qquad \qquad \vdots\\
+		\qquad \LET~\REC~x~y_1~\cdots~y_n=M~\IN~N\\
+		\qquad M~N_1~\cdots~N_n\\
+		\qquad (M_1,~\cdots~,M_n)\\
+		\qquad \LET~(M_1,~\cdots~,M_n)=M~\IN~N\\
+		\qquad \ARRAY.\CREATE~M~N\\
+		\qquad M_1.(M_2)\\
+		\qquad M_1.(M_2)\leftarrow M_3\\
+	\end{array}
+	\]
 \end{frame}
 
 \begin{frame}
@@ -195,6 +227,7 @@
 	\frametitle{K正規化}
 	\LARGE 
 	全ての部分式に名前を付ける
+
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
 			\begin{center}
@@ -213,331 +246,342 @@
 			\end{center}
 		\end{column}
 	\end{columns}
+
+	\vfill
+
+	束縛の付け替えが伴う
 \end{frame}
 
 \section{意味論の定義}
 
 \begin{frame}
 	\frametitle{大ステップ意味論}
-	\Huge 
+	\LARGE
+	\begin{center}
+	プログラム変換の検証に適する
+
+	\vfill
+
+	$\Updownarrow$
+
+	\vfill
+
+	無限ループとエラーの区別が困難
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{例:型無しラムダ計算}
+	\Large
+	構文
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[
+				\begin{array}{lcl}
+					t & ::= & n \\
+						& | & \lambda x.~t \\
+						& | & t~t
+				\end{array}
+			\]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[
+				\begin{array}{lcl}
+					v & ::= & n \\
+						& | & \lambda x.~t \\
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	意味論
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\centering
+			$n \Rightarrow n$
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\centering
+			$\lambda x.~t \Rightarrow \lambda x.~t$
+		\end{column}
+	\end{columns}
+
+	\begin{prooftree}
+		\AxiomC{$t_1 \Rightarrow \lambda x.~t_0$}
+		\AxiomC{$t_2 \Rightarrow v_2$}
+		\AxiomC{$[x \mapsto v_2]t_0 \Rightarrow v$}
+		\TrinaryInfC{$t_1~t_2 \Rightarrow v$}
+	\end{prooftree}
+\end{frame}
+
+\begin{frame}
+	\frametitle{例:型無しラムダ計算}
+	\begin{columns}
+		\begin{column}{0.4\textwidth}
+			{\LARGE エラー}
+			{\Large \[ 0~0 \not \Rightarrow v \]}
+			適用できる規則が無い
+		\end{column}
+		\begin{column}{0.6\textwidth}
+			{\LARGE 無限ループ}
+			{\Large \[ ~(\lambda x.xx)(\lambda x.xx) \not \Rightarrow v \]}
+			有限回の規則適用で導出できない
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	\begin{center}
+		{\LARGE 区別できない}
+	\end{center}
 \end{frame}
 
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論}
+	\LARGE
+	余帰納的定義
+	\begin{columns}
+		\begin{column}{0.3\textwidth}
+			\begin{prooftree}
+				\AxiomC{$t_1 \mathop{\Rightarrow}\limits^{\infty}$}
+				\UnaryInfC{$t_1~t_2 \mathop{\Rightarrow}\limits^\infty$}
+			\end{prooftree}
+		\end{column}
+		\begin{column}{0.7\textwidth}
+			\begin{prooftree}
+				\AxiomC{$t_1 \Rightarrow v_1$}
+				\AxiomC{$t_2 \mathop{\Rightarrow}\limits^\infty$}
+				\BinaryInfC{$t_1~t_2 \mathop{\Rightarrow}\limits^\infty$}
+			\end{prooftree}
+		\end{column}
+	\end{columns}
+
+	\begin{prooftree}
+		\AxiomC{$t_1 \Rightarrow \lambda x.~t_0$}
+		\AxiomC{$t_2 \Rightarrow v_2$}
+		\AxiomC{$[x \mapsto v_2]t_0 \mathop{\Rightarrow}\limits^\infty$}
+		\TrinaryInfC{$t_1~t_2 \mathop{\Rightarrow}\limits^\infty$}
+	\end{prooftree}
 \end{frame}
 
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論}
+	\LARGE
+	\begin{columns}
+		\begin{column}{0.4\textwidth}
+			エラー
+			\[ 0~0 \not {\mathop{\Rightarrow}\limits^\infty} \]
+			{\normalsize 適用できる規則がない}
+		\end{column}
+		\begin{column}{0.6\textwidth}
+			無限ループ
+			\[ (\lambda x.x x)(\lambda x.x x) \mathop{\Rightarrow}\limits^\infty \]
+			{\normalsize 無限回の規則適用を許す}
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	\begin{center}
+		区別できる
+	\end{center}
+\end{frame}
+
+\section{束縛の表現}
+
+\begin{frame}
+	\frametitle{名前による表現}
+	\LARGE $\alpha$等価性の議論が面倒
+	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
+
+	\vfill
+
+	捕獲が起こりうる
+	\[ 
+		\begin{array}{lcl}
+			[x \mapsto z](\lambda z.~x) & = & \lambda w.~z \\
+																	& \not = & \lambda z.~z
+		\end{array}
+	\]
 \end{frame}
 
 \begin{frame}
+	\frametitle{ド・ブラン インデックス}
+	\LARGE
+	何番目の束縛かで変数を表現
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x. \lambda y. \lambda z.~x z (y z) \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda. \lambda. \lambda.~2~0~(1~0) \]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	$\alpha$等価な式は文面上も等価
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x.\lambda y.~x \]
+			\[ \lambda a.\lambda b.~a \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda.\lambda.~1 \]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	捕獲も回避できる
+\end{frame}
+
+\begin{frame}
+	\frametitle{シフト}
+	\LARGE 自由変数のインデックスをずらす
+	\[\uparrow^d t \]
+
+	束縛の付け替え
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x.~x \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda.~1 \]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x.\lambda y.~x \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[
+				\begin{array}{l}
+					\lambda.\lambda.~\uparrow^1 0 \\
+					= \lambda. \lambda.~1
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
 	\frametitle{K正規化の実装}
+\begin{lstlisting}[frame=none]
+Fixpoint knormal e :=
+  match e with
+  | Exp.Var x => Var x
+  | Exp.Abs e => Abs (knormal e)
+  | Exp.App e1 e2 =>
+      Let (knormal e1)
+        (Let (shift 1 (knormal e2))
+          (App 1 0))
+  end.
+\end{lstlisting}
 \end{frame}
 
-\begin{frame}
-	\frametitle{正当性の検証}
+\section{正当性の検証}
+
+\begin{frame}[fragile]
+	\frametitle{コンパイラの検証}
+	\LARGE 言語拡張のたび全ての証明を修正
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+\begin{lstlisting}[frame=none]
+Inductive t :=
+  | Var : nat -> t
+$\vdots$
+Proof.
+  intros t.
+  induction t.
+  Case "Var".
+\end{lstlisting}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+\begin{lstlisting}[frame=none]
+Inductive t :=
+  @r{| Int : Z -> t}@
+  | Var : nat -> t
+$\vdots$
+Proof.
+  intros t.
+  induction t.
+  @r{Case "Nat".}@
+    $\vdots$
+  Case "Var".
+\end{lstlisting}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Coqの証明自動化機能}
+	\LARGE 構文の違いを自動証明で吸収
+
+	\vfill
+
+\begin{lstlisting}[frame=none]
+Lemma shift_0 : forall e c,
+  shift c 0 e = e.
+Proof.
+  intros e.
+  induction e; intros ?; simpl;
+    f_equal;
+    solve [ apply shift_var_0 | eauto ].
+Qed.
+\end{lstlisting}
 \end{frame}
 
 \begin{frame}
 	\frametitle{言語の拡張}
+	\LARGE 四則演算、if等を追加
+	\begin{center}
+		\Large 
+		\begin{tabular}{|l||l|l|}
+			\hline
+			 & 構文の種類 & 証明の行数 \\
+			\hline
+			\hline
+			拡張前 & 3 & 110 \\
+			\hline
+			拡張後 & 20 & 141 \\
+			\hline
+		\end{tabular}
+	\end{center}
+
+	\vfill
+
+	高い再利用性を示した
 \end{frame}
 
 \section{結論}
 
 \begin{frame}
 	\frametitle{結論}
+	\Large K正規化をCoqで検証できた
+	\begin{itemize}
+		\item ド・ブラン インデックス、\\余帰納的大ステップ意味論の採用で証明が簡潔に
+		\item 証明自動化による再利用性の高い証明
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
-	\frametitle{関連研究}
+	\frametitle{今後の課題}
+	\Large さらに言語を拡張し、MinCamlと同等に
+	\begin{itemize}
+		\item タプルや複数引数の関数
+		\item 配列
+		\item 外部関数呼び出し
+	\end{itemize}
+
+	\vfill
+
+	K正規化以外の検証
 \end{frame}
-
-
-\section{単純な使い方}
-
-\subsection{フォント}
-
-% * \begin{frame} と \end{frame} で囲った部分にスライドの内容を書く
-% * \frametitle{...} にスライドのタイトルを書く
-\begin{frame}
-  \frametitle{フォント}
-  {\scriptsize こんにちは、世界。}\\
-  {\footnotesize こんにちは、世界。}\\
-  {\small こんにちは、世界。}\\
-  こんにちは、世界。\\% {\normalsize こんにちは、世界。}
-  {\large こんにちは、世界。}\\
-  {\Large こんにちは、世界。}\\
-  {\LARGE こんにちは、世界。}\\
-  {\Huge こんにちは、世界。}
-  \vfill% 縦方向によく伸びる空白（適当に間隔を開けたい時に便利）
-  \structure{こんにちは、世界。}\\% 強調表示1
-  \alert{こんにちは、世界。}% 強調表示2
-\end{frame}
-
-\subsection{箇条書き}
-
-\begin{frame}
-  \frametitle{箇条書き}
-  番号なし箇条書き：
-  \begin{itemize}
-  \item 項目1
-  \item 項目2
-  \item 項目3
-  \end{itemize}
-  番号つき箇条書き：
-  \begin{enumerate}
-  \item 項目1
-  \item 項目2
-  \item 項目3
-  \end{enumerate}
-\end{frame}
-
-\section{ちょっと特殊な機能}
-
-\subsection{ブロック}
-
-\begin{frame}
-  \frametitle{ブロックの使用例}
-  \begin{block}{ブロックのタイトル}
-    ブロックの内容。
-  \end{block}
-  \vfill
-  \begin{exampleblock}{ブロックのタイトル}
-    exampleblock は例のためのブロックです。
-  \end{exampleblock}
-  \vfill
-  \begin{alertblock}{ブロックのタイトル}
-    alertblock は強調のためのブロックです。
-    alert のブロック版だと思えばいいでしょう。
-  \end{alertblock}
-\end{frame}
-
-\begin{frame}
-  \frametitle{定理環境の使用例}
-  \renewcommand{\thedefinition}{1.1}% 定義の番号
-  \begin{definition}[定義のタイトル]
-    定義の内容
-  \end{definition}
-  \vfill
-  \renewcommand{\thelemma}{2.2}% 補題の番号
-  \begin{lemma}[補題のタイトル]
-    補題の内容
-  \end{lemma}
-  \vfill
-  \renewcommand{\thetheorem}{3.4}% 定理の番号
-  \begin{theorem}[定理のタイトル]
-    定理の内容
-  \end{theorem}
-  \vfill
-  \begin{proof}[証明のタイトル]
-    証明の内容
-  \end{proof}
-\end{frame}
-
-\begin{frame}
-  \frametitle{ブロック環境}
-  次の環境が使えます。
-  \begin{itemize}
-  \item block
-  \item exampleblock
-  \item alertblock
-  \item 定義(definition)
-  \item 公理(axiom)
-  \item 定理(theorem)
-  \item 補題(lemma)
-  \item 系(corollary)
-  \item 命題(proposition)
-  \item 証明(proof) --- 他の環境と少しだけ使い方が違うので注意
-  \end{itemize}
-  ※ block, exampleblock, alertblock はただの色違い。それ以外は block 環境と同じ色。
-\end{frame}
-
-\subsection{オーバーレイ}
-
-\begin{frame}
-  \frametitle{オーバーレイ}
-  \alert{オーバーレイ(overlay)}とは、
-  \begin{itemize}
-    \pause% \pause 以降の文章は後から表示される
-    \item 単純なアニメーションみたいなもの
-    \pause
-    \item 最初のスライドでは隠していた文字や図形を、あとから表示させる
-    \pause
-    \item よく使うのは pause（他にもいろいろある）
-  \end{itemize}
-\end{frame}
-
-\section{ソースコードの書き方}
-
-\begin{frame}
-  \frametitle{ソースコードの書き方}
-  ソースコードは verbatim 環境でも書けるが、あまり綺麗ではない。
-  \vfill
-  listings を使うのがおすすめ :
-  \begin{itemize}
-  \item listings.sty --- LaTeX で綺麗なソースコードを書くためのスタイルファイル
-  \item jlisting.sty --- ソースコード中で日本語を使いたい時に必要（listings.sty と併用）
-  \end{itemize}
-\end{frame}
-
-\begin{frame}
-  \renewcommand{\baselinestretch}{1.3}% 箇条書き項目の間隔を広げる (詰まり過ぎると見難いので)
-  \frametitle{ソースコードの書き方}
-  \begin{itemize}
-  \item frame 環境のオプションに fragile を指定する
-    \begin{itemize}
-    \item 指定の方法はソースコードを参照
-    \item 指定しないと、コンパイルできない
-    \end{itemize}
-  \item listings はあまり高度な自動色付けができない
-    \begin{itemize}
-    \item せいぜい、予約語の強調とか、文字列・コメントの色つけ程度
-    \item 細かい強調は手動で行ったほうが良い（後述）
-    \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]% frame 環境のオプションに fragile を指定
-  \frametitle{ソースコードの例}
-  \begin{itemize}
-  \item 長いソースコードには lstlisting 環境を使う
-  \item 文中のソースコードには lstinline マクロを使う（用法は verb と同じ）
-  \end{itemize}
-  \vfill
-  例1) lstlisting 環境：
-\begin{lstlisting}
-type 'a bin_tree =
-  | Leaf of 'a
-  | Node of 'a bin_tree * 'a bin_tree
-
-let rec listup_nodes = function
-  | Leaf x -> [x]
-  | Node (r, l) -> (listup_nodes r) @ (listup_nodes l)
-\end{lstlisting}
-  \vfill
-  例2) lstinline マクロ：\\
-  \lstinline|listup_nodes| の型は \lstinline|'a bin_tree -> 'a list| である。
-\end{frame}
-
-\subsection{一時的にスタイル or 言語を変更する}
-
-\begin{frame}[fragile]% frame 環境のオプションに fragile を指定
-  \frametitle{一時的にスタイル or 言語を変更する}
-  ソースコードの強調表示の設定：
-  \begin{itemize}
-  \item 共通の定義はプリアンブルの lstset で行う。
-  \item 個別に変更するときは、lstlisting、lstinline のオプションで指定する。
-  \end{itemize}
-  \vfill
-  例1) フレームなし
-\begin{lstlisting}[frame=none]
-let rec fact n =
-  if n = 0 then 1 else n * (fact (n - 1))
-\end{lstlisting}
-  \vfill
-  例2) C 言語に変更
-\begin{lstlisting}[language=C]
-int fact (int n) {
-  if (n == 0) {
-    return 1;
-  } else {
-    return n * fact(n - 1);
-  }
-}
-\end{lstlisting}
-\end{frame}
-
-\subsection{ソースコードの手動強調表示}
-
-\begin{frame}[fragile]% frame 環境のオプションに fragile を指定
-  \frametitle{ソースコードの手動強調表示}
-  以下の書式で強調表示ができるようになっている。\\
-  （使い方はソースコードを参照）
-  \begin{itemize}
-  \item \verb|@/.../@| --- イタリック：\lstinline|@/hoge/@|
-  \item \verb|@r{...}@| --- 赤：\lstinline|@r{hoge}@|
-  \item \verb|@g{...}@| --- 緑：\lstinline|@g{hoge}@|
-  \item \verb|@b{...}@| --- 青：\lstinline|@b{hoge}@|
-  \end{itemize}
-  \vfill
-  例）
-\begin{lstlisting}
-let fact n
-  let rec @g{fact'}@ @b{i}@ @r{acc}@ =
-    if @b{i = 0}@ then @r{acc}@ else @g{fact'}@ @b{(i - 1)}@ @r{(n * acc)}@
-  in
-  @g{fact'}@ @b{n}@ @r{1}@
-\end{lstlisting}
-\end{frame}
-
-\section{レイアウト}
-
-\begin{frame}
-  \frametitle{columns/column 環境}
-  \begin{columns}%% columns 環境の中に column 環境を入れる
-    \begin{column}{0.2\textwidth}%% [横幅] 0.2\textwidth = ページ幅の 20 %
-      %% ページの左側に表示される内容:
-      \begin{center}
-        \includegraphics{sample-image.eps}
-      \end{center}
-    \end{column}
-    \begin{column}{0.8\textwidth}
-      %% ページの右側に表示される内容:
-      \begin{itemize}
-      \item ページを横に分割
-      \item 図・表・文を横に並べて配置可能
-      \item よく使うレイアウト
-      \item minipage 環境でも同じ事ができる
-      \end{itemize}
-    \end{column}
-  \end{columns}
-  \pause\vfill
-  \begin{columns}%% columns 環境の中に column 環境を入れる
-    \begin{column}{0.4\textwidth}
-      %% ページの左側に表示される内容:
-      \begin{center}
-        入れ子にしてみる
-      \end{center}
-      \begin{columns}
-        \begin{column}{0.33\textwidth}
-          \includegraphics[width=\textwidth]{sample-image.eps}
-        \end{column}
-        \begin{column}{0.33\textwidth}
-          \includegraphics[width=\textwidth]{sample-image.eps}
-        \end{column}
-        \begin{column}{0.33\textwidth}
-          \includegraphics[width=\textwidth]{sample-image.eps}
-        \end{column}
-      \end{columns}
-    \end{column}
-    \begin{column}{0.6\textwidth}
-      %% ページの右側に表示される内容:
-      \begin{itemize}
-      \item 3 つ以上の分割も可能
-      \item 入れ子も可能
-      \item 柔軟に使えて便利！
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-%% ===============================================
-%% 予備スライド
-%% ===============================================
-
-%% 予備スライドは appendix 環境の中に書きましょう。
-\begin{appendix}
-
-%% 予備スライドの先頭に APPENDIX と書かれたページを挟む（お好みで消去しても良い）
-\frame[plain]{\centerline{\Huge\bfseries\color{structure}APPENDIX}}
-
-\section{予備のスライド}
-
-\begin{frame}
-  \frametitle{予備のスライド}
-  予備スライドは appendix 環境の中に書きましょう。
-\end{frame}
-
-\end{appendix}
 
 \end{document}

@@ -114,6 +114,10 @@
 \newcommand{\CREATE}{\keyword{create}}
 \newcommand{\AND}{\keyword{and}}
 \newcommand{\IN}{\keyword{in}}
+\newcommand{\TRUE}{\keyword{true}}
+\newcommand{\WHILE}{\keyword{while}}
+\newcommand{\DO}{\keyword{do}}
+\newcommand{\DONE}{\keyword{done}}
 
 %% ===============================================
 %% 本文
@@ -145,48 +149,154 @@
   \tableofcontents[sectionstyle=show,subsectionstyle=hide]
 \end{frame}
 
-\section{関連研究}
+\section{研究背景}
 
 \begin{frame}
 	\frametitle{関連研究}
+	\LARGE CompCert(Leroy et al.)
+	\begin{itemize}
+		\item Cコンパイラの正当性の検証
+	\end{itemize}
+
+	Chlipala POPL 2010
+	\begin{itemize}
+		\item 非純粋関数型言語処理系の正当性の検証
+	\end{itemize}
+
+	\begin{center}
+		\normalsize
+		\begin{tabular}{l|ll}
+			 & CompCert & Chlipala 2010 \\
+			\hline
+			○ & 副作用 入出力 & 高階関数 副作用 \\
+			× & N引数の構文 高階関数 & N引数の構文 入出力 \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{N引数の構文の難しさ}
+	\Large
+\begin{lstlisting}[frame=none]
+Inductive t :=
+    $\vdots$
+  | App : list t -> t.
+\end{lstlisting}
+	listの中がpositiveでないかもしれない
+\begin{lstlisting}[frame=none]
+Definition list t := t -> t.
+Definition oops t :=
+  match t with
+  | App f => f t
+  | _ => t
+  end.
+(* 矛盾！ *)
+Check (oops (App oops) : False).
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{入出力の難しさ}
+	\begin{itemize}
+		\item 文面から評価結果が定まらない
+			\begin{itemize}
+				\item e.g. read\_line ()
+			\end{itemize}
+		\item 出力結果を区別
+			\begin{itemize}
+				\item 以下のプログラムは等価か?
+			\end{itemize}
+
+	\begin{columns}
+		\begin{column}{0.3\textwidth}
+			\begin{center}
+\begin{lstlisting}[frame=none]
+()
+\end{lstlisting}
+			\end{center}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\begin{center}
+\begin{lstlisting}[frame=none]
+print_endline "hoge"
+\end{lstlisting}
+			\end{center}
+		\end{column}
+	\end{columns}
+
+	\begin{columns}
+		\begin{column}{0.3\textwidth}
+\begin{lstlisting}[frame=none]
+while true do
+  ()
+done
+\end{lstlisting}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+\begin{lstlisting}[frame=none]
+while true do
+  print_endline "hoge"
+done
+\end{lstlisting}
+		\end{column}
+	\end{columns}
+	\end{itemize}
 \end{frame}
 
 \section{MinCaml}
 
 \begin{frame}
-	\frametitle{MinCaml}
+	\frametitle{MinCamlの特徴}
 	\Large 住井による教育用コンパイラ(FDPE 2005)
 	\begin{itemize}
 		\item OCamlで2000行程度
-		\item 非純粋な関数型言語
-		\item 型推論
-		\item 定数畳み込み等の最適化
+		\item 本格的な処理系
+			\begin{itemize}
+				\item 非純粋な関数型言語
+				\item 型推論
+				\item 定数畳み込み等の最適化
+			\end{itemize}
 	\end{itemize}
 \end{frame}
 
 \begin{frame}
 	\frametitle{対象言語}
 	\Large
+	\begin{itemize}
+		\item \alert<1>{高階関数}
+		\item \alert<2>{N引数の構文}
+		\item \alert<3>{副作用}
+		\item \alert<4>{外部関数呼び出し(入出力)}
+	\end{itemize}
+	{\normalsize
 	\[
 	\begin{array}{l}
-		M, N, e ::= \\
+		M, N ::= \\
 		\qquad \qquad \vdots\\
-		\qquad \LET~\REC~x~y_1~\cdots~y_n=M~\IN~N\\
-		\qquad M~N_1~\cdots~N_n\\
-		\qquad (M_1,~\cdots~,M_n)\\
+		\qquad \alert<1>{\LET~\REC~x~y_1~\cdots~y_n=M~\IN~N}\\
+		\qquad \alert<1,2,4>{M~N_1~\cdots~N_n}\\
+		\qquad \alert<2>{(M_1,~\cdots~,M_n)}\\
 		\qquad \LET~(M_1,~\cdots~,M_n)=M~\IN~N\\
-		\qquad \ARRAY.\CREATE~M~N\\
-		\qquad M_1.(M_2)\\
-		\qquad M_1.(M_2)\leftarrow M_3\\
+		\qquad \alert<3>{\ARRAY.\CREATE~M~N}\\
+		\qquad \alert<3>{M_1.(M_2)}\\
+		\qquad \alert<3>{M_1.(M_2)\leftarrow M_3}\\
 	\end{array}
-	\]
+	\]}
+	\pause
+	\pause
+	\pause
 \end{frame}
 
 \begin{frame}
 	\frametitle{内部設計}
+	\begin{itemize}
+		\item 様々なコンパイルフェーズ
+		\item 疎結合
+	\end{itemize}
+
 	\begin{figure}[htb]
 		\centering
-		\includegraphics[width=11cm,clip]{mincaml.png}
+		\includegraphics[width=8cm,clip]{mincaml.png}
 	\end{figure}
 	{\footnotesize \url{http://esumii.github.io/min-caml/index8.html}}
 \end{frame}
@@ -206,8 +316,8 @@
 			\begin{center}
 				\[
 					\begin{array}{l}
-						\LET~x = b * c~\IN \\
-						\LET~y = a + x~\IN \\
+						\alert<2>{\LET~x = b * c~\IN} \\
+						\alert<2>{\LET~y = a + x~\IN} \\
 						y + d
 					\end{array}
 				\]
@@ -217,11 +327,36 @@
 
 	\vfill
 
-	束縛に関する操作
+	\alert<2>{束縛に関する操作}
+	\pause
 \end{frame}
 
 \begin{frame}
 	\frametitle{期待される正当性}
+	\Large
+	K正規化後の項を評価してみる
+	{\normalsize \begin{columns}
+		\begin{column}{0.4\textwidth}
+			\[ \lambda x.\lambda y.\lambda z.~x+y+z \]
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			\[ 
+					\begin{array}{l}
+						\lambda x.\lambda y.\lambda z.\\
+						\LET~a = x+y~\IN \\
+						a + z
+					\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+	{\normalsize
+	\begin{theorem}
+		項tが値vに評価される場合、項tをK正規化した結果K(t)は値vをK正規化した結果K(v)に評価される
+	\end{theorem}
+	\begin{theorem}
+		項tの評価が停止しない場合、項tをK正規化した結果K(t)の評価は停止しない
+\end{theorem}}
+
 \end{frame}
 
 \section{意味論の定義}
@@ -250,7 +385,7 @@
 		\begin{column}{0.5\textwidth}
 			\[
 				\begin{array}{lcl}
-					t & ::= & n \\
+					t & ::= & b \\
 					  & | & x \\
 						& | & \lambda x.~t \\
 						& | & t~t
@@ -260,7 +395,7 @@
 		\begin{column}{0.5\textwidth}
 			\[
 				\begin{array}{lcl}
-					v & ::= & n \\
+					v & ::= & b \\
 						& | & \lambda x.~t \\
 				\end{array}
 			\]
@@ -274,7 +409,7 @@
 		\begin{column}{0.5\textwidth}
 			\begin{prooftree}
 				\AxiomC{}
-				\UnaryInfC{$n \Downarrow n$}
+				\UnaryInfC{$b \Downarrow b$}
 			\end{prooftree}
 		\end{column}
 		\begin{column}{0.5\textwidth}
@@ -298,7 +433,7 @@
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
 			{\LARGE エラー}
-			{\Large \[ 0~0 \not \Downarrow v \]}
+			{\Large \[ \TRUE~\TRUE \not \Downarrow v \]}
 			適用できる規則が無い
 		\end{column}
 		\begin{column}{0.6\textwidth}
@@ -352,7 +487,7 @@
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
 			エラー
-			\[ 0~0 \not \Uparrow \]
+			\[ \TRUE~\TRUE \not \Uparrow \]
 			{\normalsize 適用できる規則がない}
 		\end{column}
 		\begin{column}{0.6\textwidth}
@@ -369,6 +504,35 @@
 	\end{center}
 \end{frame}
 
+\begin{frame}
+	\frametitle{入出力を含む言語への拡張}
+	\LARGE どのような入出力を行ったかを表すラベルを付与
+	{\large \[ \keyword{read\_line}~()\Downarrow "hoge"~/~\keyword{read\_line}~()="hoge" \]}
+
+	{\normalsize \begin{columns}
+		\begin{column}{0.4\textwidth}
+			\[ \WHILE~\TRUE~\DO~()~\DONE \Uparrow~/~\epsilon \]
+		\end{column}
+		\begin{column}{0.6\textwidth}
+			\[
+				\begin{array}{l}
+					(\WHILE~\TRUE~\DO\\
+					\keyword{print\_endline}~\mathit{"hoge"}\\
+					\DONE) \Uparrow \\
+					/~\keyword{print\_endline}~\mathit{"hoge"} \cdots
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+
+	\vfill
+
+	\begin{center}
+		区別できる
+	\end{center}
+
+\end{frame}
+
 \section{束縛の表現}
 
 \begin{frame}
@@ -378,7 +542,10 @@
 
 	\vfill
 
-	捕獲が起こりうる
+	freshな名前が必要になる
+	\begin{itemize}
+		\item 束縛の関係を乱さないよう変数名を選ぶ
+	\end{itemize}
 	\[
 		\begin{array}{lcl}
 			[x \mapsto z](\lambda z.~x) & \simeq & \lambda z'.~z \\
@@ -406,6 +573,9 @@
 	\vfill
 
 	$\alpha$等価な式は構文的に等価
+	\begin{itemize}
+		\item 名前のfreshnessから解放
+	\end{itemize}
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
 			\[ \lambda x.\lambda y.~x \]
@@ -415,10 +585,6 @@
 			\[ \lambda.\lambda.~1 \]
 		\end{column}
 	\end{columns}
-
-	\vfill
-
-	捕獲も回避できる
 \end{frame}
 
 \begin{frame}
@@ -427,12 +593,12 @@
 	\[\uparrow^d t \]
 
 	束縛の付け替え
-	\begin{columns}
+	{\large \begin{columns}
 		\begin{column}{0.5\textwidth}
-			\[ \lambda x.~x \]
+			\[ (\lambda x.~x)~(\lambda x.~y) \]
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\[ \lambda.~1 \]
+			\[ (\lambda.~0)~(\lambda.~1) \]
 		\end{column}
 	\end{columns}
 
@@ -440,17 +606,24 @@
 
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
-			\[ \lambda x.\lambda y.~x \]
+			\[ 
+					\begin{array}{l}
+						\LET~a = \lambda x.~x~\IN \\
+						\LET~b = \lambda x.~y~\IN \\
+						a~b
+					\end{array}
+			\]
 		\end{column}
 		\begin{column}{0.5\textwidth}
 			\[
 				\begin{array}{l}
-					\lambda.\lambda.~\uparrow^1 0 \\
-					= \lambda. \lambda.~1
+					\LET~\_ = \lambda.~0~\IN \\
+					\LET~\_ = \alert{\uparrow^1}(\lambda.~1)~\IN \\
+					1~0
 				\end{array}
 			\]
 		\end{column}
-	\end{columns}
+	\end{columns}}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -505,6 +678,14 @@ Proof.
 \begin{frame}[fragile]
 	\frametitle{Coqの証明自動化機能}
 	\LARGE 構文の違いを自動証明で吸収
+	\begin{center}
+		\footnotesize
+		\begin{tabular}{ll}
+			$\mathit{tactic}_1;\mathit{tactic}_2$ & $\mathit{tactic}_1$で生じたサブゴール全てに$\mathit{tactic}_2$を適用 \\
+			$\keyword{f\_equal}$ & $t_1~t_2\cdots t_n = t'_1~t'_2\cdots t'_n$から$t_1=t'_1,~t_2=t'_2\cdots$\\
+			$\keyword{solve} [\mathit{tactic}_1 | \cdots | \mathit{tactic}_n]$ & どれかでサブゴールを閉じられるなら閉じる
+		\end{tabular}
+	\end{center}
 
 	\vfill
 

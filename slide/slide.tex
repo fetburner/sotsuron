@@ -131,12 +131,12 @@
 	\begin{itemize}
 		\item 証明を簡潔に
 			\begin{itemize}
-				\item 余帰納的意味論
-				\item ド・ブラン インデックス
+				\item 余帰納的大ステップ意味論
+				\item de Buijnインデックス
 			\end{itemize}
 		\item スケーラビリティの確保
 			\begin{itemize}
-				\item 半自動証明
+				\item 証明自動化機能を活用
 			\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -152,94 +152,15 @@
 \section{研究背景}
 
 \begin{frame}
-	\frametitle{関連研究}
-	\LARGE CompCert(Leroy et al.)
+	\frametitle{既存研究}
+	\LARGE CompCert [Leroyら 2005]
 	\begin{itemize}
 		\item Cコンパイラの正当性の検証
 	\end{itemize}
 
-	Chlipala POPL 2010
+	[Chlipala 2010]
 	\begin{itemize}
 		\item 非純粋関数型言語処理系の正当性の検証
-	\end{itemize}
-
-	\begin{center}
-		\normalsize
-		\begin{tabular}{l|ll}
-			 & CompCert & Chlipala 2010 \\
-			\hline
-			○ & 副作用 入出力 & 高階関数 副作用 \\
-			× & N引数の構文 高階関数 & N引数の構文 入出力 \\
-		\end{tabular}
-	\end{center}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{N引数の構文の難しさ}
-	\Large
-\begin{lstlisting}[frame=none]
-Inductive t :=
-    $\vdots$
-  | App : list t -> t.
-\end{lstlisting}
-	listの中がpositiveでないかもしれない
-\begin{lstlisting}[frame=none]
-Definition list t := t -> t.
-Definition oops t :=
-  match t with
-  | App f => f t
-  | _ => t
-  end.
-(* 矛盾！ *)
-Check (oops (App oops) : False).
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{入出力の難しさ}
-	\begin{itemize}
-		\item 文面から評価結果が定まらない
-			\begin{itemize}
-				\item e.g. read\_line ()
-			\end{itemize}
-		\item 出力結果を区別
-			\begin{itemize}
-				\item 以下のプログラムは等価か?
-			\end{itemize}
-
-	\begin{columns}
-		\begin{column}{0.3\textwidth}
-			\begin{center}
-\begin{lstlisting}[frame=none]
-()
-\end{lstlisting}
-			\end{center}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\begin{center}
-\begin{lstlisting}[frame=none]
-print_endline "hoge"
-\end{lstlisting}
-			\end{center}
-		\end{column}
-	\end{columns}
-
-	\begin{columns}
-		\begin{column}{0.3\textwidth}
-\begin{lstlisting}[frame=none]
-while true do
-  ()
-done
-\end{lstlisting}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-\begin{lstlisting}[frame=none]
-while true do
-  print_endline "hoge"
-done
-\end{lstlisting}
-		\end{column}
-	\end{columns}
 	\end{itemize}
 \end{frame}
 
@@ -247,10 +168,9 @@ done
 
 \begin{frame}
 	\frametitle{MinCamlの特徴}
-	\Large 住井による教育用コンパイラ(FDPE 2005)
+	\Large 住井による教育用コンパイラ [FDPE 2005]
 	\begin{itemize}
 		\item OCamlで2000行程度
-		\item 本格的な処理系
 			\begin{itemize}
 				\item 非純粋な関数型言語
 				\item 型推論
@@ -271,10 +191,10 @@ done
 	{\normalsize
 	\[
 	\begin{array}{l}
-		M, N ::= \\
+		M, N, f ::= \\
 		\qquad \qquad \vdots\\
 		\qquad \alert<1>{\LET~\REC~x~y_1~\cdots~y_n=M~\IN~N}\\
-		\qquad \alert<1,2,4>{M~N_1~\cdots~N_n}\\
+		\qquad \alert<1,2,4>{f~N_1~\cdots~N_n}\\
 		\qquad \alert<2>{(M_1,~\cdots~,M_n)}\\
 		\qquad \LET~(M_1,~\cdots~,M_n)=M~\IN~N\\
 		\qquad \alert<3>{\ARRAY.\CREATE~M~N}\\
@@ -359,6 +279,114 @@ done
 
 \end{frame}
 
+\section{束縛の表現}
+
+\begin{frame}
+	\frametitle{名前による表現}
+	\LARGE $\alpha$等価性の議論が面倒
+	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
+
+	\vfill
+
+	freshな名前が必要になる
+	\begin{itemize}
+		\item 束縛の関係を乱さないよう変数名を選ぶ
+	\end{itemize}
+	\[
+		\begin{array}{lcl}
+			[x \mapsto z](\lambda z.~x) & \simeq & \lambda z'.~z \\
+																	& \not \simeq & \lambda z.~z
+		\end{array}
+	\]
+\end{frame}
+
+\begin{frame}
+	\frametitle{de Buijnインデックス}
+	\LARGE
+	何番目の束縛かで変数を表現
+	\begin{itemize}
+		\item 内側から外側へ数える
+	\end{itemize}
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x. \lambda y. \lambda z.~x z (y z) \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda. \lambda. \lambda.~2~0~(1~0) \]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	$\alpha$等価な式は構文的に等価
+	\begin{itemize}
+		\item 名前のfreshnessを保証
+	\end{itemize}
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda x.\lambda y.~x \]
+			\[ \lambda a.\lambda b.~a \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ \lambda.\lambda.~1 \]
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}
+	\frametitle{シフト}
+	\LARGE 自由変数のインデックスをずらす
+	\[\uparrow^d t \]
+
+	束縛に関する操作
+	{\large \begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ (\lambda x.~x)~(\lambda x.~y) \]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[ (\lambda.~0)~(\lambda.~1) \]
+		\end{column}
+	\end{columns}
+
+	\vfill
+
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\[ 
+					\begin{array}{l}
+						\LET~a = \lambda x.~x~\IN \\
+						\LET~b = \lambda x.~y~\IN \\
+						a~b
+					\end{array}
+			\]
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\[
+				\begin{array}{l}
+					\LET~\_ = \lambda.~0~\IN \\
+					\LET~\_ = \alert{\uparrow^1}(\lambda.~1)~\IN \\
+					1~0
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{K正規化の実装}
+\begin{lstlisting}[basicstyle={\ttfamily\normalsize}]
+Fixpoint knormal e :=
+  match e with
+  | Exp.Var x => K.Var x
+  | Exp.Abs e => K.Abs (knormal e)
+  | Exp.App e1 e2 =>
+      K.Let (knormal e1)
+        (K.Let (shift 1 (knormal e2))
+          (App 1 0))
+  end.
+\end{lstlisting}
+\end{frame}
+
 \section{意味論の定義}
 
 \begin{frame}
@@ -407,16 +435,10 @@ done
 	意味論
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
-			\begin{prooftree}
-				\AxiomC{}
-				\UnaryInfC{$b \Downarrow b$}
-			\end{prooftree}
+			\[\overline{b \Downarrow b}\]
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\begin{prooftree}
-				\AxiomC{}
-				\UnaryInfC{$\lambda x.~t \Downarrow \lambda x.~t$}
-			\end{prooftree}
+			\[\overline{\lambda x.~t \Downarrow \lambda x.~t}\]
 		\end{column}
 	\end{columns}
 
@@ -453,7 +475,7 @@ done
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論(1/2)}
 	\LARGE
-	余帰納的定義(Leroy 2006)
+	余帰納的に定義 [Leroy 2006]
 	\begin{columns}
 		\begin{column}{0.3\textwidth}
 			\begin{prooftree}
@@ -471,6 +493,8 @@ done
 			\end{prooftree}
 		\end{column}
 	\end{columns}
+
+	\vfill
 
 	\begin{prooftree}
 		\AxiomC{$t_1 \Downarrow \lambda x.~t_0$}
@@ -505,9 +529,9 @@ done
 \end{frame}
 
 \begin{frame}
-	\frametitle{入出力を含む言語への拡張}
+	\frametitle{参考:入出力を含む言語への拡張}
 	\LARGE どのような入出力を行ったかを表すラベルを付与
-	{\large \[ \keyword{read\_line}~()\Downarrow "hoge"~/~\keyword{read\_line}~()="hoge" \]}
+	{\large \[ \keyword{read\_line}~()\Downarrow "hoge"~/~(\keyword{read\_line}~()="hoge") \]}
 
 	{\normalsize \begin{columns}
 		\begin{column}{0.4\textwidth}
@@ -524,122 +548,8 @@ done
 			\]
 		\end{column}
 	\end{columns}}
-
-	\vfill
-
-	\begin{center}
-		区別できる
-	\end{center}
-
 \end{frame}
 
-\section{束縛の表現}
-
-\begin{frame}
-	\frametitle{名前による表現}
-	\LARGE $\alpha$等価性の議論が面倒
-	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
-
-	\vfill
-
-	freshな名前が必要になる
-	\begin{itemize}
-		\item 束縛の関係を乱さないよう変数名を選ぶ
-	\end{itemize}
-	\[
-		\begin{array}{lcl}
-			[x \mapsto z](\lambda z.~x) & \simeq & \lambda z'.~z \\
-																	& \not \simeq & \lambda z.~z
-		\end{array}
-	\]
-\end{frame}
-
-\begin{frame}
-	\frametitle{ド・ブラン インデックス}
-	\LARGE
-	何番目の束縛かで変数を表現
-	\begin{itemize}
-		\item 内側から外側へ数える
-	\end{itemize}
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda x. \lambda y. \lambda z.~x z (y z) \]
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda. \lambda. \lambda.~2~0~(1~0) \]
-		\end{column}
-	\end{columns}
-
-	\vfill
-
-	$\alpha$等価な式は構文的に等価
-	\begin{itemize}
-		\item 名前のfreshnessから解放
-	\end{itemize}
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda x.\lambda y.~x \]
-			\[ \lambda a.\lambda b.~a \]
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda.\lambda.~1 \]
-		\end{column}
-	\end{columns}
-\end{frame}
-
-\begin{frame}
-	\frametitle{シフト}
-	\LARGE 自由変数のインデックスをずらす
-	\[\uparrow^d t \]
-
-	束縛の付け替え
-	{\large \begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ (\lambda x.~x)~(\lambda x.~y) \]
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[ (\lambda.~0)~(\lambda.~1) \]
-		\end{column}
-	\end{columns}
-
-	\vfill
-
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ 
-					\begin{array}{l}
-						\LET~a = \lambda x.~x~\IN \\
-						\LET~b = \lambda x.~y~\IN \\
-						a~b
-					\end{array}
-			\]
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[
-				\begin{array}{l}
-					\LET~\_ = \lambda.~0~\IN \\
-					\LET~\_ = \alert{\uparrow^1}(\lambda.~1)~\IN \\
-					1~0
-				\end{array}
-			\]
-		\end{column}
-	\end{columns}}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{K正規化の実装}
-\begin{lstlisting}[frame=none]
-Fixpoint knormal e :=
-  match e with
-  | Exp.Var x => K.Var x
-  | Exp.Abs e => K.Abs (knormal e)
-  | Exp.App e1 e2 =>
-      K.Let (knormal e1)
-        (K.Let (shift 1 (knormal e2))
-          (App 1 0))
-  end.
-\end{lstlisting}
-\end{frame}
 
 \section{正当性の検証}
 
@@ -689,7 +599,7 @@ Proof.
 
 	\vfill
 
-\begin{lstlisting}[frame=none]
+\begin{lstlisting}[]
 Lemma shift_0 : forall e c,
   shift c 0 e = e.
 Proof.
@@ -725,7 +635,7 @@ Qed.
 	\frametitle{結論}
 	\Large K正規化をCoqで検証できた
 	\begin{itemize}
-		\item ド・ブラン インデックス、\\余帰納的大ステップ意味論の採用で証明が簡潔に
+		\item de Buijnインデックス、\\余帰納的大ステップ意味論の採用で証明が簡潔に
 		\item 証明自動化による再利用性の高い証明
 	\end{itemize}
 \end{frame}

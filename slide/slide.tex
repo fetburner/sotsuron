@@ -152,7 +152,20 @@
 \section{研究背景}
 
 \begin{frame}
-	\frametitle{既存研究}
+	\frametitle{コンパイラの形式的検証の意義}
+	\Large コンパイラのバグは伝播
+
+	\vfill
+
+	$\Rightarrow$コンパイラ由来のバグはソースコード上に現れない
+
+	\vfill
+
+	$\Rightarrow$デバッグが困難
+\end{frame}
+
+\begin{frame}
+	\frametitle{関連研究}
 	\LARGE CompCert [Leroyら 2005]
 	\begin{itemize}
 		\item Cコンパイラの正当性の検証
@@ -164,13 +177,29 @@
 	\end{itemize}
 \end{frame}
 
+\begin{frame}
+	\frametitle{本研究の目標と現状}
+	\Large 目標:MinCamlのK正規化の正当性を検証
+
+	\vfill
+
+	現状:サブセットのK正規化の正当性を検証
+	\begin{center}
+		\normalsize
+		\begin{tabular}{ll}
+			実装済 & 1引数関数、算術演算、let、if \\
+			未実装 & タプル、複数引数関数、配列、外部関数呼び出し \\
+		\end{tabular}
+	\end{center}
+\end{frame}
+
 \section{MinCaml}
 
 \begin{frame}
 	\frametitle{MinCamlの特徴}
 	\Large 住井による教育用コンパイラ [FDPE 2005]
 	\begin{itemize}
-		\item OCamlで2000行程度
+		\item OCamlで2000行程度の実装
 			\begin{itemize}
 				\item 非純粋な関数型言語
 				\item 型推論
@@ -236,8 +265,8 @@
 			\begin{center}
 				\[
 					\begin{array}{l}
-						\alert<2>{\LET~x = b * c~\IN} \\
-						\alert<2>{\LET~y = a + x~\IN} \\
+						\alert<2>{\LET~x =} b * c~\alert<2>{\IN} \\
+						\alert<2>{\LET~y =} a + x~\alert<2>{\IN} \\
 						y + d
 					\end{array}
 				\]
@@ -252,30 +281,64 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{期待される正当性}
-	\Large
-	K正規化後の項を評価してみる
+	\frametitle{期待される定理(1/2)}
+	{\LARGE K正規化後の項を評価してみる}
+
+	\vfill
+
+	\Large 単純な値では一致
 	{\normalsize \begin{columns}
 		\begin{column}{0.4\textwidth}
-			\[ \lambda x.\lambda y.\lambda z.~x+y+z \]
+			\[ 1+2\Downarrow 3 \]
 		\end{column}
 		\begin{column}{0.4\textwidth}
 			\[ 
-					\begin{array}{l}
-						\lambda x.\lambda y.\lambda z.\\
-						\LET~a = x+y~\IN \\
-						a + z
-					\end{array}
+				\begin{array}{l}
+					\LET~a = 1~\IN \\
+					\LET~b = 2~\IN \\
+					a + b\Downarrow 3
+				\end{array}
 			\]
 		\end{column}
 	\end{columns}}
-	{\normalsize
+
+	\vfill
+
+	元の値のK正規形と一致
+	{\normalsize \begin{columns}
+		\begin{column}{0.4\textwidth}
+			\[
+				\begin{array}{l}
+					\lambda x.\lambda y.\lambda z.~x+y+z\\
+					\Downarrow \lambda x.\lambda y.\lambda z.~x+y+z
+				\end{array}
+			\]
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			\[ 
+				\begin{array}{l}
+					\lambda x.\lambda y.\lambda z.\\
+					\LET~a = x+y~\IN \\
+					a + z \\
+					\Downarrow \lambda x.\lambda y.\lambda z.\\
+					\LET~a = x+y~\IN \\
+					a + z \\
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+\end{frame}
+
+\begin{frame}
+	\frametitle{期待される定理(2/2)}
+	{\Large
 	\begin{theorem}
 		項tが値vに評価される場合、項tをK正規化した結果K(t)は値vをK正規化した結果K(v)に評価される
 	\end{theorem}
 	\begin{theorem}
 		項tの評価が停止しない場合、項tをK正規化した結果K(t)の評価は停止しない
-\end{theorem}}
+	\end{theorem}}
+	\Large 今回検証した言語の範囲では評価は決定的なため、逆も成り立つ
 
 \end{frame}
 
@@ -364,12 +427,13 @@
 			\[
 				\begin{array}{l}
 					\LET~\_ = \lambda.~0~\IN \\
-					\LET~\_ = \alert{\uparrow^1}(\lambda.~1)~\IN \\
+					\LET~\_ = \only<1>{\alert{\uparrow^1}(\lambda.~1)}\only<2->{\lambda.~2}~\IN \\
 					1~0
 				\end{array}
 			\]
 		\end{column}
 	\end{columns}}
+	\pause
 \end{frame}
 
 \begin{frame}[fragile]
@@ -530,24 +594,21 @@ Fixpoint knormal e :=
 
 \begin{frame}
 	\frametitle{参考:入出力を含む言語への拡張}
-	\LARGE どのような入出力を行ったかを表すラベルを付与
-	{\large \[ \keyword{read\_line}~()\Downarrow "hoge"~/~(\keyword{read\_line}~()="hoge") \]}
+	\Large どのような入出力を行ったかを表すラベルの列を付与
+	{\normalsize \[
+			\begin{array}{l}
+				\keyword{print\_endline}~\mathit{"hoge"};~\keyword{read\_line}~()\\
+				\Downarrow "fuga"~/~(\keyword{print\_endline}~\mathit{"hoge"},~\keyword{read\_line}~()="fuga")
+			\end{array}
+	\]}
 
-	{\normalsize \begin{columns}
-		\begin{column}{0.4\textwidth}
-			\[ \WHILE~\TRUE~\DO~()~\DONE \Uparrow~/~\epsilon \]
-		\end{column}
-		\begin{column}{0.6\textwidth}
-			\[
-				\begin{array}{l}
-					(\WHILE~\TRUE~\DO\\
-					\keyword{print\_endline}~\mathit{"hoge"}\\
-					\DONE) \Uparrow \\
-					/~\keyword{print\_endline}~\mathit{"hoge"} \cdots
-				\end{array}
-			\]
-		\end{column}
-	\end{columns}}
+	ストリームを用いれば無限回の入出力も
+	{\normalsize \[
+		\begin{array}{l}
+			(\WHILE~\TRUE~\DO~\keyword{print\_endline}~\mathit{"hoge"}\DONE) \\
+			\Uparrow /~(\keyword{print\_endline}~\mathit{"hoge"}, \keyword{print\_endline}~\mathit{"hoge"}, \cdots)
+		\end{array}
+	\]}
 \end{frame}
 
 
@@ -590,11 +651,10 @@ Proof.
 	\LARGE 構文の違いを自動証明で吸収
 	\begin{center}
 		\footnotesize
-		\begin{tabular}{ll}
-			$\mathit{tactic}_1;\mathit{tactic}_2$ & $\mathit{tactic}_1$で生じたサブゴール全てに$\mathit{tactic}_2$を適用 \\
-			$\keyword{f\_equal}$ & $t_1~t_2\cdots t_n = t'_1~t'_2\cdots t'_n$から$t_1=t'_1,~t_2=t'_2\cdots$\\
-			$\keyword{solve} [\mathit{tactic}_1 | \cdots | \mathit{tactic}_n]$ & どれかでサブゴールを閉じられるなら閉じる
-		\end{tabular}
+		\begin{itemize}
+			\item $\mathit{tactic}_1;\mathit{tactic}_2$
+			\item $\keyword{solve} [\mathit{tactic}_1 | \cdots | \mathit{tactic}_n]$
+		\end{itemize}
 	\end{center}
 
 	\vfill
@@ -626,7 +686,7 @@ Qed.
 
 	\vfill
 
-	高いスケーラビリティを示した
+	単純な変更に対してはスケール
 \end{frame}
 
 \section{結論}
@@ -651,7 +711,7 @@ Qed.
 
 	\vfill
 
-	K正規化以外の検証
+	K正規化以外の検証も
 \end{frame}
 
 \end{document}

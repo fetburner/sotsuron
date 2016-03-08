@@ -166,7 +166,7 @@
 
 \begin{frame}
 	\frametitle{関連研究}
-	\LARGE CompCert [Leroyら 2005]
+	\LARGE CompCert [Leroyら 2006]
 	\begin{itemize}
 		\item Cコンパイラの正当性の検証
 	\end{itemize}
@@ -199,9 +199,9 @@
 	\frametitle{MinCamlの特徴}
 	\Large 住井による教育用コンパイラ [FDPE 2005]
 	\begin{itemize}
+		\item 非純粋な関数型言語
 		\item OCamlで2000行程度の実装
 			\begin{itemize}
-				\item 非純粋な関数型言語
 				\item 型推論
 				\item 定数畳み込み等の最適化
 			\end{itemize}
@@ -507,9 +507,9 @@ Fixpoint knormal e :=
 	\end{columns}
 
 	\begin{prooftree}
-		\AxiomC{$t_1 \Downarrow \lambda x.~t_0$}
+		\AxiomC{$t_1 \Downarrow \lambda x.~t$}
 		\AxiomC{$t_2 \Downarrow v_2$}
-		\AxiomC{$[x \mapsto v_2]t_0 \Downarrow v$}
+		\AxiomC{$[x \mapsto v_2]t \Downarrow v$}
 		\TrinaryInfC{$t_1~t_2 \Downarrow v$}
 	\end{prooftree}
 \end{frame}
@@ -539,7 +539,7 @@ Fixpoint knormal e :=
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論(1/2)}
 	\LARGE
-	余帰納的に定義 [Leroy 2006]
+	余帰納的に定義 [Leroy及びGrall 2009]
 	\begin{columns}
 		\begin{column}{0.3\textwidth}
 			\begin{prooftree}
@@ -561,9 +561,9 @@ Fixpoint knormal e :=
 	\vfill
 
 	\begin{prooftree}
-		\AxiomC{$t_1 \Downarrow \lambda x.~t_0$}
+		\AxiomC{$t_1 \Downarrow \lambda x.~t$}
 		\AxiomC{$t_2 \Downarrow v_2$}
-		\AxiomC{$[x \mapsto v_2]t_0 \Uparrow$}
+		\AxiomC{$[x \mapsto v_2]t \Uparrow$}
 		\doubleLine
 		\TrinaryInfC{$t_1~t_2 \Uparrow$}
 	\end{prooftree}
@@ -638,7 +638,7 @@ $\vdots$
 Proof.
   intros t.
   induction t.
-  @r{Case "Nat".}@
+  @r{Case "Int".}@
     $\vdots$
   Case "Var".
 \end{lstlisting}

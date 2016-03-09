@@ -127,12 +127,12 @@
 
 \begin{frame}
 	\frametitle{研究目的}
-	\LARGE MinCamlのK正規化の正当性を検証
+	\LARGE MinCamlのK正規化の正当性を形式的に検証
 	\begin{itemize}
 		\item 証明を簡潔に
 			\begin{itemize}
-				\item 余帰納的大ステップ意味論
 				\item de Buijnインデックス
+				\item 余帰納的大ステップ意味論
 			\end{itemize}
 		\item スケーラビリティの確保
 			\begin{itemize}
@@ -153,15 +153,11 @@
 
 \begin{frame}
 	\frametitle{コンパイラの形式的検証の意義}
-	\Large コンパイラのバグは伝播
-
-	\vfill
-
-	$\Rightarrow$コンパイラ由来のバグはソースコード上に現れない
-
-	\vfill
-
-	$\Rightarrow$デバッグが困難
+	\LARGE コンパイラのバグ
+	\begin{itemize}
+		\item 広範囲に影響が及ぶ
+		\item デバッグが困難
+	\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -179,7 +175,7 @@
 
 \begin{frame}
 	\frametitle{本研究の目標と現状}
-	\Large 目標:MinCamlのK正規化の正当性を検証
+	\Large 目標:MinCamlの正当性を検証
 
 	\vfill
 
@@ -220,10 +216,10 @@
 	{\normalsize
 	\[
 	\begin{array}{l}
-		M, N, f ::= \\
+		M, N ::= \\
 		\qquad \qquad \vdots\\
 		\qquad \alert<1>{\LET~\REC~x~y_1~\cdots~y_n=M~\IN~N}\\
-		\qquad \alert<1,2,4>{f~N_1~\cdots~N_n}\\
+		\qquad \alert<1,2,4>{M~N_1~\cdots~N_n}\\
 		\qquad \alert<2>{(M_1,~\cdots~,M_n)}\\
 		\qquad \LET~(x_1,~\cdots~,x_n)=M~\IN~N\\
 		\qquad \alert<3>{\ARRAY.\CREATE~M~N}\\
@@ -345,7 +341,7 @@
 \section{束縛の表現}
 
 \begin{frame}
-	\frametitle{名前による表現}
+	\frametitle{名前による表現の問題点}
 	\LARGE $\alpha$等価性の議論が面倒
 	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
 
@@ -404,10 +400,10 @@
 	束縛に関する操作
 	{\large \begin{columns}
 		\begin{column}{0.5\textwidth}
-			\[ (\lambda x.~x)~(\lambda x.~y) \]
+			\[ (\lambda x.~x)~(\lambda y.~z) \]
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\[ (\lambda.~0)~(\lambda.~1) \]
+			\[ (\lambda.~0)~\alert{(\lambda.~1)} \]
 		\end{column}
 	\end{columns}
 
@@ -418,7 +414,7 @@
 			\[ 
 					\begin{array}{l}
 						\LET~a = \lambda x.~x~\IN \\
-						\LET~b = \lambda x.~y~\IN \\
+						\LET~b = \lambda y.~z~\IN \\
 						a~b
 					\end{array}
 			\]
@@ -427,7 +423,7 @@
 			\[
 				\begin{array}{l}
 					\LET~\_ = \lambda.~0~\IN \\
-					\LET~\_ = \only<1>{\alert{\uparrow^1}(\lambda.~1)}\only<2->{\lambda.~2}~\IN \\
+					\LET~\_ = \alert{\only<1>{\uparrow^1(\lambda.~1)}\only<2->{\lambda.~2}}~\IN \\
 					1~0
 				\end{array}
 			\]
@@ -539,7 +535,7 @@ Fixpoint knormal e :=
 \begin{frame}
 	\frametitle{余帰納的大ステップ意味論(1/2)}
 	\LARGE
-	余帰納的に定義 [Leroy及びGrall 2009]
+	余帰納的に定義 [Leroy, Grall 2009]
 	\begin{columns}
 		\begin{column}{0.3\textwidth}
 			\begin{prooftree}
@@ -615,7 +611,7 @@ Fixpoint knormal e :=
 \section{正当性の検証}
 
 \begin{frame}[fragile]
-	\frametitle{コンパイラの検証}
+	\frametitle{検証における問題点}
 	\Large 言語拡張のたび全ての証明の修正が必要
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
@@ -647,7 +643,7 @@ Proof.
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{Coqの証明自動化機能}
+	\frametitle{解決策:Coqの証明自動化機能}
 	\LARGE 構文の違いを自動証明で吸収
 	\begin{center}
 		\footnotesize
@@ -675,18 +671,18 @@ Qed.
 	\frametitle{拡張性の評価}
 	\LARGE プリミティブ、if、letを追加
 	\begin{center}
-		\large
+		\normalsize
 		\begin{tabular}{l|ll}
 			 & 構文 & 証明の行数 \\
 			\hline
-			拡張前 & 変数 匿名関数 関数適用 & 110 \\
-			拡張後 & 20種類 & 141 \\
+			拡張前 & 3種類(変数, 匿名関数, 関数適用) & 110 \\
+			拡張後 & 20種類(整数プリミティブ, if, let等) & 141 \\
 		\end{tabular}
 	\end{center}
 
 	\vfill
 
-	単純な変更に対してはスケール
+	{\Large 比較的単純な変更に対してはスケール}
 \end{frame}
 
 \section{結論}

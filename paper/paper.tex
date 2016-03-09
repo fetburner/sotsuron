@@ -107,16 +107,6 @@ MinCamlは非純粋な関数型言語のコンパイラであり，IO，要素�
 対象言語に算術演算，if，letといったプリミティブを追加した場合にも正当性の証明に要するスクリプトは141行に留められる．
 \end{abstract}
 
-\chapter*{謝辞}
-
-本論文を作成するにあたり，指導教員の住井先生にはお忙しい中貴重な時間を割いて頂き，丁寧かつ熱心なご指導を賜りました．
-ここに感謝の意を表します．
-
-また，要旨及び章立ての添削等，広範にわたってご指導頂いた松田先生に深く感謝いたします．
-
-そして，多くの経験に裏打ちされた指摘を下さったKiselyov先生及び住井・松田研究室の先輩方，
-研究で悩んだ事があればすぐに相談に乗ってくれた同級生の皆様に感謝いたします．
-
 %% 目次
 \tableofcontents
 
@@ -136,7 +126,7 @@ MinCamlは非純粋な関数型言語のコンパイラであり，IO，要素�
 コンパイラによって生成されたコードを確認する必要があるため，
 ソースコード由来のバグを発見するより困難である．
 
-そのため定理証明支援系を用いたコンパイラの正当性の証明が盛んに試みられてきた．
+そのためコンパイラの正当性の形式的検証が盛んに試みられてきた．
 その中でも成功した研究として，LeroyらによるCompCert\cite{2006-Leroy-Blazy-Dargaye}が挙げられる．
 これはC言語のほとんどをカバーする機能を持ったサブセットのコンパイラをCoqによって検証する試みである．
 C言語にはIOの機能が含まれているため，CompCertの対象言語にもIOの機能が含まれている．
@@ -150,7 +140,7 @@ Chlipalaの研究\cite{ImpurePOPL10}が挙げられる．
 IOを扱う機能も存在しない．
 
 検証を難しくするために要素数が可変な構文やIOといった対象言語の機構は忌避されがちであるが，
-住井による教育用コンパイラMinCaml\cite{DBLP:conf/icfp/Sumii05}は非純粋な関数型言語を対象とするほか，これらの機構を備えている．
+住井による教育用コンパイラMinCaml\cite{DBLP:conf/icfp/Sumii05} \cite{MinCaml110006664764}は非純粋な関数型言語を対象とするほか，これらの機構を備えている．
 もしMinCamlを検証できれば，そこで得られる知見は対象言語に同様の機構を持つ処理系を検証する際にも有用であると考えられる．
 
 \section{本研究の貢献}
@@ -163,8 +153,8 @@ MinCamlのサブセットにあたる言語におけるK正規化処理の正当
 対象言語に算術演算，if，letといったプリミティブを追加した場合と証明の行数を比較する．
 
 \chapter{MinCaml}
-MinCamlは住井による教育用コンパイラ\cite{DBLP:conf/icfp/Sumii05}である．
-これは値呼び戦略で，純粋でない機能を含む関数型言語を対象言語としている．
+MinCamlは住井による教育用コンパイラ\cite{DBLP:conf/icfp/Sumii05} \cite{MinCaml110006664764}である．
+これは値呼び戦略で，純粋でない言語機能を含む関数型言語を対象言語としている．
 また，OCamlで2000行程度の簡潔な実装ではあるが，
 型推論を行い，中間言語に変換した後に定数畳み込み等の最適化を行うといった
 現実の関数型言語処理系と共通した点を多数持っている．
@@ -274,7 +264,7 @@ $\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように変数名を付�
 \section{de Bruijnインデックス}
 このような名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックスが挙げられる．
 これは変数の位置から数えて何番目の束縛に対応するかで束縛を表現するものである．
-例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x z (y z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
+例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x~z~(y~z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
 
 名前による表現では構文的に等価な式以外にも，$\alpha$等価な式も等価として扱わなければならなかった．
 一方de Bruijnインデックスでは$\alpha$等価な式は全て構文的に等価となるため，定理証明支援系での扱いに適する．
@@ -339,13 +329,13 @@ MinCamlのサブセットのままでは意味論の定義に適さない部分�
 並列代入$[k\mapsto \overline{e}]e$の定義を\figurename\ref{eqn:target-subst}に示す．
 \begin{figure}[htbp]
 	\[ \begin{array}{lll}
-			\uparrow^d_\mathcal{c} c & = & c \\
-			\uparrow^d_\mathcal{c} (\textit{op} (e_1,\cdots,e_n)) & = & \textit{op} (\uparrow^d_\mathcal{c} e_1,\cdots,\uparrow^d_\mathcal{c} e_n) \\
-			\uparrow^d_\mathcal{c} (\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \IF~\uparrow^d_\mathcal{c} e_1~\THEN~\uparrow^d_\mathcal{c} e_2~\ELSE~\uparrow^d_\mathcal{c} e_3 \\
-			\uparrow^d_\mathcal{c} (\LET~\_=e_1~\IN~e_2) & = & \LET~\_=\uparrow^d_\mathcal{c} e_1~\IN~\uparrow^d_{\mathcal{c} + 1}e_2 \\
-			\uparrow^d_\mathcal{c} k & = & \left \{ \begin{array}{ll} k & k < \mathcal{c} \\ k + d & \mbox{otherwise} \end{array} \right. \\
-			\uparrow^d_\mathcal{c} (\lambda.~e) & = & \lambda.~\uparrow^d_{\mathcal{c}+1} e \\
-			\uparrow^d_\mathcal{c} (e_1~e_2) & = & (\uparrow^d_\mathcal{c} e_1)~(\uparrow^d_\mathcal{c} e_2)
+			\uparrow^d_\mathcal{C} c & = & c \\
+			\uparrow^d_\mathcal{C} (\textit{op} (e_1,\cdots,e_n)) & = & \textit{op} (\uparrow^d_\mathcal{C} e_1,\cdots,\uparrow^d_\mathcal{C} e_n) \\
+			\uparrow^d_\mathcal{C} (\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \IF~\uparrow^d_\mathcal{C} e_1~\THEN~\uparrow^d_\mathcal{C} e_2~\ELSE~\uparrow^d_\mathcal{C} e_3 \\
+			\uparrow^d_\mathcal{C} (\LET~\_=e_1~\IN~e_2) & = & \LET~\_=\uparrow^d_\mathcal{C} e_1~\IN~\uparrow^d_{\mathcal{C} + 1}e_2 \\
+			\uparrow^d_\mathcal{C} k & = & \left \{ \begin{array}{ll} k & k < \mathcal{C} \\ k + d & \mbox{otherwise} \end{array} \right. \\
+			\uparrow^d_\mathcal{C} (\lambda.~e) & = & \lambda.~\uparrow^d_{\mathcal{C}+1} e \\
+			\uparrow^d_\mathcal{C} (e_1~e_2) & = & (\uparrow^d_\mathcal{C} e_1)~(\uparrow^d_\mathcal{C} e_2)
 	\end{array} \]
 	\caption{シフトの定義}
 	\label{eqn:target-shift}
@@ -526,7 +516,7 @@ LeroyとGrallによって余帰納的大ステップ意味論が提案されて�
 
 これらの規則を用いると，余帰納的定義では無限回の規則適用が可能なため，
 $(\lambda x.x x)(\lambda x.x x) \Uparrow$が成り立つ．
-一方，適用できる規則が存在しないため，$\forall v.~\TRUE~\TRUE \not \Uparrow$が成り立つ．
+一方，適用できる規則が存在しないため，$\TRUE~\TRUE \not \Uparrow$が成り立つ．
 このように，停止しない評価と行き詰まり状態を区別できる．
 
 \chapter{Coqによる形式的検証}
@@ -547,7 +537,7 @@ K正規化処理で期待される正当性はどのような命題で表され�
 \begin{itemize}
 	\item $\forall c~e.~\uparrow^0_c e = e$
 	\item $\forall c~c'~d~d'~e.~c \leq c' \leq c + d \Longrightarrow \uparrow^{d'}_{c'} \uparrow^d_c e = \uparrow^{d+d'}_c e$
-	\item $c' \leq c \Longrightarrow \uparrow^{d'}_{c'} \uparrow^d_c e = \uparrow^{d}_{d'+ c} \uparrow^{d'}_{c'} e$
+	\item $\forall c~c'~d~d'~e.~c' \leq c \Longrightarrow \uparrow^{d'}_{c'} \uparrow^d_c e = \uparrow^{d}_{d'+ c} \uparrow^{d'}_{c'} e$
 	\item $\forall c~d~e~k~\overline{e}.~c \leq k \Longrightarrow \uparrow^d_c [k \mapsto \overline{e}] e = [d + k \mapsto \overline{e}] \uparrow^d_c e$
 	\item $\forall c~d~e~k.~c \leq k \land |\overline{e}| + k \leq d + c \Longrightarrow [x \mapsto |\overline{e}| ] \uparrow^d_c e = \uparrow^{d-|\overline{e}|}_c e$
 \end{itemize}
@@ -573,15 +563,15 @@ K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価さ�
 \begin{theorem}\label{thm:knormal-correctness1}
 	式eが値vに評価される場合，式eをK正規化した結果K(e)は値vをK正規化した結果K(v)に評価される
 \end{theorem}
-また，定理\label{thm:knormal-correctness1}も成り立つ事が予想される．
-\begin{theorem}
+また，定理\ref{thm:knormal-correctness2}も成り立つ事が予想される．
+\begin{theorem}\label{thm:knormal-correctness2}
 	式eの評価が停止しない場合，式tをK正規化した結果K(e)の評価は停止しない
 \end{theorem}
 これらは評価の導出に関する帰納法で証明できる．
 その際，以下のような補題が必要となる．
 
 \begin{itemize}
-	\item $\forall c~d~e.~K(\uparrow^d_c e) = \uparrow^d_c e$
+	\item $\forall c~d~e.~K(\uparrow^d_c e) = \uparrow^d_c K(e)$
 	\item $\forall e~k~\overline{e}.~K([k \mapsto \overline{e}]e)=[k \mapsto K(\overline{e})]K(e)$
 \end{itemize}
 
@@ -642,20 +632,6 @@ $\mathit{tactic}_1;\mathit{tactic}_2$と書くと二つのタクティックを�
 K正規化の正当性のように複雑な証明については変更を強いられたが，
 サブゴールについての場合分けを追加する事で対処が可能であった．
 
-\chapter{結論}
-型なし$\lambda$計算に算術演算，if，letといったプリミティブを追加した，
-MinCamlのサブセットにあたる言語のK正規化の正当性をCoqで証明できた．
-その際de Buijnインデックス，余帰納的大ステップ意味論を採用した事により
-証明を簡潔にできた．
-加えて，Coqの証明自動化に関する機能を用いた事によって，
-対象言語の変更に対して証明がスケールするようにできた．
-
-本研究では対象言語をMinCamlのサブセットに限定しているが，
-今後は組や複数引数の関数といった要素数が可変の構文，
-配列や外部関数呼び出しのような副作用を伴う言語機能を
-含むように対象言語を拡張し，
-MinCamlと同等なものにする必要がある．
-
 \chapter{議論・関連研究}
 本研究では束縛の表現にde Bruijnインデックスを用いたが，
 名前による束縛の表現の欠点を改善した他の手法として，
@@ -694,6 +670,29 @@ PHOASを束縛の表現に用いた場合，
 これらの束縛の表現も比較検討したところ，de Bruijnインデックスが最も
 理論的な簡単さと証明の簡潔さのバランスに優れていると判断した．
 
+\chapter{結論}
+型なし$\lambda$計算に算術演算，if，letといったプリミティブを追加した，
+MinCamlのサブセットにあたる言語のK正規化の正当性をCoqで証明できた．
+その際de Buijnインデックス，余帰納的大ステップ意味論を採用した事により
+証明を簡潔にできた．
+加えて，Coqの証明自動化に関する機能を用いた事によって，
+対象言語の変更に対して証明がスケールするようにできた．
+
+本研究では対象言語をMinCamlのサブセットに限定しているが，
+今後は組や複数引数の関数といった要素数が可変の構文，
+配列や外部関数呼び出しのような副作用を伴う言語機能を
+含むように対象言語を拡張し，
+MinCamlと同等なものにする必要がある．
+
+\chapter*{謝辞}
+
+本論文を作成するにあたり，指導教員の住井教授にはお忙しい中貴重な時間を割いて頂き，丁寧かつ熱心なご指導を賜りました．
+ここに感謝の意を表します．
+
+また，要旨及び章立ての添削等，広範にわたってご指導頂いた松田准教授に深く感謝いたします．
+
+そして，多くの経験に裏打ちされた指摘を下さったKiselyov先生及び住井・松田研究室の先輩方，
+研究で悩んだ事があればすぐに相談に乗ってくれた同級生の皆様に感謝いたします．
 
 %% 参考文献: bibtex
 \bibliographystyle{junsrt}

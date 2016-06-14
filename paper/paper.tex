@@ -209,7 +209,7 @@ MinCamlの対象言語とコンパイル先のアセンブリには多くの隔�
 \section{K正規化}
 本研究ではMinCamlのコンパイルフェーズのうち，
 束縛の付け替えが伴う非自明なプログラム変換であるK正規化処理に注目する．
-K正規化とは，型推論を経て明示的に型が付いた言語を中間表現の一つであるK正規形に変換する操作を指し，
+K正規化とは，型推論を経て明示的に型が付いた言語を中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作を指し，
 直観的には全ての部分式を変数に束縛して名前を付けた形式に相当する．
 \figurename\ref{eqn:mincaml-knormal}にMinCamlのK正規形の抽象構文を示す．
 
@@ -262,7 +262,7 @@ $\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように変数名を付�
 これも定理証明支援系を用いて定式化する場合に煩雑となる．
 
 \section{de Bruijnインデックス}
-このような名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックスが挙げられる．
+このような名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックス\cite{Pierce:TypeSystems}が挙げられる．
 これは変数の位置から数えて何番目の束縛に対応するかで束縛を表現するものである．
 例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x~z~(y~z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
 
@@ -443,7 +443,7 @@ $\forall v.~(\lambda x.~x)~(\lambda x.~y) \not \Downarrow v$が成り立つ．
 
 \section{余帰納的大ステップ意味論}
 大ステップ操作的意味論においても停止しない評価と行き詰まり状態を区別する試みとして，
-LeroyとGrallによって余帰納的大ステップ意味論が提案されている．\cite{DBLP:journals/iandc/LeroyG09}
+LeroyとGrallによって余帰納的大ステップ意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
 これは，評価が停止しない事を表す述語を余帰納的に定義する事で，
 従来の評価規則を補うものである．
 
@@ -563,11 +563,12 @@ K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価さ�
 \begin{theorem}\label{thm:knormal-correctness1}
 	式eが値vに評価される場合，式eをK正規化した結果K(e)は値vをK正規化した結果K(v)に評価される
 \end{theorem}
-また，定理\ref{thm:knormal-correctness2}も成り立つ事が予想される．
+これは評価の導出に関する帰納法で証明できる．
+
+また，定理\ref{thm:knormal-correctness2}も評価の導出に関する帰納法で証明できる．
 \begin{theorem}\label{thm:knormal-correctness2}
 	式eの評価が停止しない場合，式tをK正規化した結果K(e)の評価は停止しない
 \end{theorem}
-これらは評価の導出に関する帰納法で証明できる．
 その際，以下のような補題が必要となる．
 
 \begin{itemize}
@@ -607,7 +608,7 @@ Qed.
 \end{lstlisting}
 
 Coqにおいて証明は，与えられた結論に対して仮定の導入や
-場合分け等の操作に相当するタクティックを適用する事で進行する．\cite{09thecoq}
+場合分け等の操作に相当するタクティックを適用する事で進行する\cite{09thecoq}．
 $\mathit{tactic}_1;\mathit{tactic}_2$と書くと二つのタクティックを合成する事もできる．
 この場合$\mathit{tactic}_1$が現在のサブゴールに適用され，その結果生じた全てのサブゴールに$\mathit{tactic}_2$が適用される．
 

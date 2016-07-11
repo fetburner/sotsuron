@@ -1,61 +1,14 @@
-\documentclass{sumiilab-paper}
-%% uplatex を使う場合：
-% \documentclass[uplatex]{sumiilab-paper}
+% 以下の3行は変更しないこと．
+\documentclass[T]{compsoft}
+\taikai{2016}
+\pagestyle {empty}
+
+\usepackage [dvipdfmx] {graphicx}
 \usepackage{amsmath,amssymb,amsfonts,ascmac,cases,bm}
 \usepackage{cite}
 \usepackage{enumitem}
 \usepackage{bussproofs}
 \usepackage{url}
-
-%% ===============================================
-%% 論文の表紙に表示される情報
-%% ===============================================
-
-% 論文の年度と種類
-\paper{平成 27 年度 卒業論文}% 学部生
-%\paper{平成 n 年度 修士論文}% 修士
-
-% 論文のタイトル
-\title{無限の入出力を行う関数型プログラムのK正規化の形式的検証}
-
-% 学籍番号と著者のお名前
-\author{B2TB2512 水野雅之}
-
-% 著者の所属
-%\institute{東北大学 工学部\\情報知能システム総合学科}% 学部生
-\institute{東北大学 大学院情報科学研究科\\情報基礎科学専攻}% 修士
-
-% 指導教員のお名前
-\supervisor{住井 英二郎 教授}% 指導教員
-% 謝辞 : 松田先生に非常に丁寧な指導を頂いた
-
-% 論文発表日時
-\date{平成28年3月11日 \quad 13:30--14:00}
-% 発表場所
-\venue{電気通信研究所 本館5階ゼミ室(M531)}
-
-%% ===============================================
-%% ソースコードの設定
-%% ===============================================
-
-% プログラミング言語と表示するフォント等の設定
-\lstset{
-  language={[Objective]Caml},% プログラミング言語
-  basicstyle={\ttfamily\small},% ソースコードのテキストのスタイル
-  keywordstyle={\bfseries},% 予約語等のキーワードのスタイル
-  commentstyle={},% コメントのスタイル
-  stringstyle={},% 文字列のスタイル
-  frame=trlb,% ソースコードの枠線の設定 (none だと非表示)
-  numbers=left,% 行番号の表示 (none だと非表示)
-  numberstyle={\footnotesize},% 行番号のスタイル
-  xleftmargin=15pt,% 左余白
-  xrightmargin=5pt,% 右余白
-  keepspaces=true,% 空白を維持する
-  mathescape,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
-  % 手動強調表示の設定
-  moredelim=[is][\bfseries]{@*}{*@},
-  moredelim=[is][\itshape]{@/}{/@}
-}
 
 %% ===============================================
 %% 論文中で使う記号とかのマクロ定義
@@ -83,30 +36,87 @@
 \newcommand{\DONE}{\keyword{done}}
 
 \begin{document}
-\maketitle
 
-\begin{abstract}
-コンパイラの形式的検証は盛んに研究されているが、入出力等の副作用があるような高階関数型プログラミング言語に対する検証はあまり行われていない。
-これは無限に入出力を行うプログラムの意味論の形式化が自明でないためである。
-我々は、入出力等の副作用を持つ外部関数の呼び出しや再帰関数、高階関数、組を持つ値呼びの関数型言語に対するK正規化を
+% 論文のタイトル
+\title{無限の入出力を行う関数型プログラムのK正規化の形式的検証}
+
+% 著者
+% 和文論文の場合，姓と名の間には半角スペースを入れ，
+% 複数の著者の間は全角スペースで区切る
+%
+\author{水野 雅之
+%
+% ここにタイトル英訳 (英文の場合は和訳) を書く．
+%
+\ejtitle{Formal Verification of Functional Programs Performing Infinite Input/Output}
+%
+% ここに著者英文表記 (英文の場合は和文表記) および
+% 所属 (和文および英文) を書く．
+% 複数著者の所属はまとめてよい．
+%
+\shozoku{Masayuki Mizuno}{東北大学大学院情報科学研究科}%
+{Graduate School of Information Sciences, Tohoku University}}
+
+% 指導教員のお名前
+%\supervisor{住井 英二郎 教授}% 指導教員
+% 謝辞 : 松田先生に非常に丁寧な指導を頂いた
+
+%% ===============================================
+%% ソースコードの設定
+%% ===============================================
+
+% プログラミング言語と表示するフォント等の設定
+%\lstset{
+%  language={[Objective]Caml},% プログラミング言語
+%  basicstyle={\ttfamily\small},% ソースコードのテキストのスタイル
+%  keywordstyle={\bfseries},% 予約語等のキーワードのスタイル
+%  commentstyle={},% コメントのスタイル
+%  stringstyle={},% 文字列のスタイル
+%  frame=trlb,% ソースコードの枠線の設定 (none だと非表示)
+%  numbers=left,% 行番号の表示 (none だと非表示)
+%  numberstyle={\footnotesize},% 行番号のスタイル
+%  xleftmargin=15pt,% 左余白
+%  xrightmargin=5pt,% 右余白
+%  keepspaces=true,% 空白を維持する
+%  mathescape,% $ で囲った部分を数式として表示する ($ がソースコード中で使えなくなるので注意)
+%  % 手動強調表示の設定
+%  moredelim=[is][\bfseries]{@*}{*@},
+%  moredelim=[is][\itshape]{@/}{/@}
+%}
+
+\Jabstract{%
+コンパイラの形式的検証は盛んに研究されているが，入出力等の副作用があるような高階関数型プログラミング言語に対する検証はあまり行われていない．
+これは無限に入出力を行うプログラムの意味論の形式化が自明でないためである．
+我々は，入出力等の副作用を持つ外部関数の呼び出しや再帰関数，高階関数，組を持つ値呼びの関数型言語に対するK正規化を
 定理証明支援系Coqを用いて形式的に検証した．
-K正規化とは全ての中間式にlet式を用いて陽に名前を与えるプログラム変換であり、
-束縛の操作を伴う点で形式化が自明でない。
-本研究では、余帰納的大ステップ意味論によりプログラムの意味を外部関数呼び出しの無限列として与えた。
-また、束縛の表現としては、他の手法と比較検討した上でde Bruijnインデックスを採用した。
-\end{abstract}
+K正規化とは全ての中間式にlet式を用いて陽に名前を与えるプログラム変換であり，
+束縛の操作を伴う点で形式化が自明でない．
+本研究では，余帰納的大ステップ意味論によりプログラムの意味を外部関数呼び出しの無限列として与えた．
+また，束縛の表現としては，他の手法と比較検討した上でde Bruijnインデックスを採用した．}
 
-%% 目次
-\tableofcontents
+\Eabstract{
+Although formal verification of compiler is actively studied,
+higher-order functional programming languages
+with side effects (e.g. input/output) are rarely verified.
+This is due to difficulty of formalizing semantics for programs performing infinite input/output.
+We have mechanically verified K-normalization for call-by-value higher-order functional programs
+with external function calls that could possively cause side effects (e.g. input/output), 
+recursive functions and pair by using the Coq proof assistant.
+K-normalization is a program conversion that names all subexpressions using "let",
+and its semantics are non-trivial due to binding manipulation.
+In this research, we defined semantics as infinite sequence of
+external function calls using coinductive big-step operational semantics.
+Futhermore, we compared several techniques to represent bindings,
+and we used de Bruijn indices. }
+%
+\maketitle \thispagestyle {empty}
 
-%% ここから本文
-
-\chapter{序論}
+\section{序論}
 
 %% 参考文献は \cite{ID} とします（ID は refs.bib 内で文献につけた識別子）
 %% BibTeX の使い方などは各自調べて下さい．
 
-\section{研究背景}
+\subsection{研究背景}
 プログラムのバグが計り知れない社会的損失をもたらす事は良く知られており，
 ソフトウェア開発においてデバッグは不可欠な存在となっている．
 中でもコンパイラのバグは深刻であり，
@@ -132,7 +142,7 @@ IOを扱う機能も存在しない．
 住井による教育用コンパイラMinCaml\cite{DBLP:conf/icfp/Sumii05} \cite{MinCaml110006664764}は非純粋な関数型言語を対象とするほか，これらの機構を備えている．
 もしMinCamlを検証できれば，そこで得られる知見は対象言語に同様の機構を持つ処理系を検証する際にも有用であると考えられる．
 
-\section{本研究の貢献}
+\subsection{本研究の貢献}
 本研究では型なし$\lambda$計算に算術演算，if，letといったプリミティブを追加した，
 MinCamlのサブセットにあたる言語におけるK正規化処理の正当性を，定理証明支援系の一つであるCoqを用いて検証する．
 その際，Coqの証明自動化に関する機能を用いる事で，対象言語に対する証明のスケーラビリティを確保する．
@@ -141,14 +151,14 @@ MinCamlのサブセットにあたる言語におけるK正規化処理の正当
 型なし$\lambda$計算を対象言語としたK正規化処理の正当性も検証し，
 対象言語に算術演算，if，letといったプリミティブを追加した場合と証明の行数を比較する．
 
-\chapter{MinCaml}
+\section{MinCaml}
 MinCamlは住井による教育用コンパイラ\cite{DBLP:conf/icfp/Sumii05} \cite{MinCaml110006664764}である．
 これは値呼び戦略で，純粋でない言語機能を含む関数型言語を対象言語としている．
 また，OCamlで2000行程度の簡潔な実装ではあるが，
 型推論を行い，中間言語に変換した後に定数畳み込み等の最適化を行うといった
 現実の関数型言語処理系と共通した点を多数持っている．
 
-\section{対象言語}
+\subsection{対象言語}
 \figurename\ref{eqn:mincaml-ast}にMinCamlの抽象構文を示す．
 MinCamlは一般的な関数型言語と同様に，整数，浮動小数点数，真偽値，関数等のプリミティブを持ち，関数は第一級である．
 
@@ -182,7 +192,7 @@ MinCamlは一般的な関数型言語と同様に，整数，浮動小数点数�
 	\label{eqn:mincaml-ast}
 \end{figure}
 
-\section{内部設計}
+\subsection{内部設計}
 MinCamlの対象言語とコンパイル先のアセンブリには多くの隔たりが存在するが，
 様々な中間言語を設定し，
 \begin{enumerate}
@@ -195,7 +205,7 @@ MinCamlの対象言語とコンパイル先のアセンブリには多くの隔�
 という処理を順番に行うことにより，ギャップを一つずつ埋める設計になっている．
 これらの処理は疎結合になっているため，個別に検証した後に組み合わせる事も容易である．
 
-\section{K正規化}
+\subsection{K正規化}
 本研究ではMinCamlのコンパイルフェーズのうち，
 束縛の付け替えが伴う非自明なプログラム変換であるK正規化処理に注目する．
 K正規化とは，型推論を経て明示的に型が付いた言語を中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作を指し，
@@ -230,12 +240,12 @@ $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表
 %例えば，$x+y$のような式をK正規化した際に$\LET~x_1=y~\IN~\LET~x_2=z~\IN~x_1+x_2$ではなく$x+y$となるよう，MinCamlでは簡単な最適化も同時に行われている．
 %また，if式を$\IF~x=y~\THEN~e_1~\ELSE~e_2$と$\IF~x \leq y~\THEN~e_1~\ELSE~e_2$のどちらかに変換もしている．
 
-\chapter{構文の定義}
+\section{構文の定義}
 Coqを用いてK正規化の正当性を証明するためには，まず対象言語の構文をCoq上で定義しなくてはならない．
 対象言語の構文は意味論の定義，ひいてはK正規化の正当性の証明にも関わるため，
 構文を適切に定義する事によって証明を簡潔にできる．
 
-\section{名前による束縛の表現の問題点}
+\subsection{名前による束縛の表現の問題点}
 定理証明支援系をを用いてコンパイラの検証をする際，
 構文の定義の中でもとりわけ検証の難易度を左右するのが束縛の表現方法である．
 紙の上で定式化を行う場合，束縛の表現方法として最も良く用いられるのは名前による表現と考えられる．
@@ -250,7 +260,7 @@ $\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように変数名を付�
 このような事が起こらないよう，$\lambda z'.~z$のように適宜変数名を付け替える必要があるが，
 これも定理証明支援系を用いて定式化する場合に煩雑となる．
 
-\section{de Bruijnインデックス}
+\subsection{de Bruijnインデックス}
 このような名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックス\cite{Pierce:TypeSystems}が挙げられる．
 これは変数の位置から数えて何番目の束縛に対応するかで束縛を表現するものである．
 例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x~z~(y~z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
@@ -282,7 +292,7 @@ de Bruijnインデックスで束縛を表現した場合に用いられる操�
 \]
 となる．
 
-\section{対象言語の構文の定義}
+\subsection{対象言語の構文の定義}
 本研究における対象言語はMinCamlのサブセットに相当するが，
 MinCamlのサブセットのままでは意味論の定義に適さない部分がある．
 次章で定義するような環境を用いない大ステップ意味論では，
@@ -365,12 +375,12 @@ MinCamlのサブセットのままでは意味論の定義に適さない部分�
 	\label{eqn:target-knormal}
 \end{figure}
 
-\chapter{意味論}\label{chapter:semantics}
+\section{意味論}\label{section:semantics}
 コンパイラの正当性を検証する際には対象言語の意味論を定義する必要がある．
 MinCamlの意味論は形式的に定義されていないため，
 本研究ではMinCamlの非形式的な意味論を基に対象言語の意味論を定義する．
 
-\section{大ステップ操作的意味論の問題点}
+\subsection{大ステップ操作的意味論の問題点}
 本研究の対象言語の意味論を定義するにあたって，
 大ステップ操作的意味論を採用する事にする．
 大ステップ操作的意味論の評価規則は構文とほぼ一対一に対応しており，
@@ -430,7 +440,7 @@ MinCamlの意味論は形式的に定義されていないため，
 $\forall v.~(\lambda x.~x)~(\lambda x.~y) \not \Downarrow v$が成り立つ．
 このように，関係$e \Downarrow v$だけでは停止しない評価と行き詰まり状態を区別できない．
 
-\section{余帰納的大ステップ意味論}
+\subsection{余帰納的大ステップ意味論}
 大ステップ操作的意味論においても停止しない評価と行き詰まり状態を区別する試みとして，
 LeroyとGrallによって余帰納的大ステップ意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
 これは，評価が停止しない事を表す述語を余帰納的に定義する事で，
@@ -508,7 +518,7 @@ $(\lambda x.x x)(\lambda x.x x) \Uparrow$が成り立つ．
 一方，適用できる規則が存在しないため，$\TRUE~\TRUE \not \Uparrow$が成り立つ．
 このように，停止しない評価と行き詰まり状態を区別できる．
 
-\chapter{Coqによる形式的検証}
+\section{Coqによる形式的検証}
 本研究で扱う対象言語の構文及び意味論が定義できたため，
 Coqを用いてK正規化の正当性を形式的に検証する．
 その際，Coqの証明自動化機能を活用することによって証明が対象言語に対してスケールするよう図る．
@@ -516,12 +526,12 @@ Coqを用いてK正規化の正当性を形式的に検証する．
 証明に要したスクリプトの行数を比較する事により，
 実際のスケーラビリティの評価を行う．
 
-\section{対象言語やK正規化におけるメタ定理}
+\subsection{対象言語やK正規化におけるメタ定理}
 Coqによって正当性を検証するにあたって，
 K正規化処理で期待される正当性はどのような命題で表されるか，
 その命題はどのようにして証明すれば良いかについて考える．
 
-\subsection{シフト及び代入についてのメタ定理}
+\subsubsection{シフト及び代入についてのメタ定理}
 シフト及び代入について，以下のようなメタ定理が成り立つ．
 \begin{itemize}
 	\item $\forall c~e.~\uparrow^0_c e = e$
@@ -537,7 +547,7 @@ K正規化処理で期待される正当性はどのような命題で表され�
 その場合クロージャが存在するために同様の補題を定義するのが難しい．
 従って，本研究では代入を用いた大ステップ操作的意味論によって対象言語の意味論を定義する．
 
-\subsection{K正規化の正当性}
+\subsubsection{K正規化の正当性}
 K正規化に期待される性質について考える．
 
 K正規化後の式を評価してみると，
@@ -549,15 +559,15 @@ K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価さ�
 値評価では関数の中身は簡約されないため，前者は$\lambda x.\lambda y.~x+y+z$に評価される一方，
 後者は$\lambda x.\lambda y.\lambda z.~\LET~a = x+y~\IN~a + z$となって一致しない．
 しかし，両者の評価結果を比較すると，定理\ref{thm:knormal-correctness1}が成り立つ事が予想される．
-\begin{theorem}\label{thm:knormal-correctness1}
-	式eが値vに評価される場合，式eをK正規化した結果K(e)は値vをK正規化した結果K(v)に評価される
-\end{theorem}
+%\begin{theorem}\label{thm:knormal-correctness1}
+%	式eが値vに評価される場合，式eをK正規化した結果K(e)は値vをK正規化した結果K(v)に評価される
+%\end{theorem}
 これは評価の導出に関する帰納法で証明できる．
 
 また，定理\ref{thm:knormal-correctness2}も評価の導出に関する帰納法で証明できる．
-\begin{theorem}\label{thm:knormal-correctness2}
-	式eの評価が停止しない場合，式tをK正規化した結果K(e)の評価は停止しない
-\end{theorem}
+%\begin{theorem}\label{thm:knormal-correctness2}
+%	式eの評価が停止しない場合，式tをK正規化した結果K(e)の評価は停止しない
+%\end{theorem}
 その際，以下のような補題が必要となる．
 
 \begin{itemize}
@@ -565,7 +575,7 @@ K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価さ�
 	\item $\forall e~k~\overline{e}.~K([k \mapsto \overline{e}]e)=[k \mapsto K(\overline{e})]K(e)$
 \end{itemize}
 
-\section{素朴な検証の問題点}
+\subsection{素朴な検証の問題点}
 コンパイラの正当性の証明を証明する際，
 自動証明を用いないような素朴な検証は対象言語に対するスケーラビリティが低くなりがちである．
 例えば，$\forall e~v~v'.e\Downarrow v \land e\Downarrow v' \Longrightarrow v = v'$のような命題を式$e$の構造に関する帰納法で証明する事を考える．
@@ -574,40 +584,40 @@ K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価さ�
 自動証明を用いない場合，全ての場合分けに対して個別に証明を書かなければならないため，
 素朴な検証ではすぐに破綻してしまう事が予想される．
 
-\section{Coqによる証明の方針}
+\subsection{Coqによる証明の方針}
 本研究では，Coqの証明自動化機能を用いる事で構文の違いの吸収を図った．
-先ほどの例を自動証明を活用して証明すると\lstlistingname\ref{src:evalto-decidable}のようになる．
-\begin{lstlisting}[caption=自動証明の活用例,label=src:evalto-decidable]
-Lemma evalto_decidable : forall e v1 v2,
-  evalto e v1 -> evalto e v2 -> v1 = v2.
-Proof.
-  intros e v1 v2 Hevalto1.
-  generalize dependent v2.
-  induction Hevalto1;
-    intros v2_ Hevalto2;
-    inversion Hevalto2;
-    clear Hevalto2;
-    repeat (subst; match goal with
-    | [ H : Abs _ = Abs _ |- _ ] => inversion H; clear H
-    | [ Hevalto : evalto ?t ?v,
-        IH : forall v, evalto ?t v -> _ = v |- _ ] =>
-        generalize (IH _ Hevalto); intros; clear Hevalto
-    end); congruence.
-Qed.
-\end{lstlisting}
+%先ほどの例を自動証明を活用して証明すると\lstlistingname\ref{src:evalto-decidable}のようになる．
+%\begin{lstlisting}[caption=自動証明の活用例,label=src:evalto-decidable]
+%Lemma evalto_decidable : forall e v1 v2,
+%  evalto e v1 -> evalto e v2 -> v1 = v2.
+%Proof.
+%  intros e v1 v2 Hevalto1.
+%  generalize dependent v2.
+%  induction Hevalto1;
+%    intros v2_ Hevalto2;
+%    inversion Hevalto2;
+%    clear Hevalto2;
+%    repeat (subst; match goal with
+%    | [ H : Abs _ = Abs _ |- _ ] => inversion H; clear H
+%    | [ Hevalto : evalto ?t ?v,
+%        IH : forall v, evalto ?t v -> _ = v |- _ ] =>
+%        generalize (IH _ Hevalto); intros; clear Hevalto
+%    end); congruence.
+%Qed.
+%\end{lstlisting}
 
 Coqにおいて証明は，与えられた結論に対して仮定の導入や
 場合分け等の操作に相当するタクティックを適用する事で進行する\cite{09thecoq}．
 $\mathit{tactic}_1;\mathit{tactic}_2$と書くと二つのタクティックを合成する事もできる．
 この場合$\mathit{tactic}_1$が現在のサブゴールに適用され，その結果生じた全てのサブゴールに$\mathit{tactic}_2$が適用される．
 
-また，\lstinline|match goal with|構文を使う事によって，
+%また，\lstinline|match goal with|構文を使う事によって，
 サブゴールの形によって場合分けを行う事もできる．
 
 これらの様な機能によって，対象言語が変更された場合にも方針に従って証明を進める事ができ，
 自明な変更に対しては殆ど証明を変更せずに無く検証を行う事も可能である．
 
-\section{言語の拡張に対するスケーラビリティの評価}
+\subsection{言語の拡張に対するスケーラビリティの評価}
 言語の拡張に対する証明のスケーラビリティを評価するため，
 型無し$\lambda$計算におけるK正規化の正当性を検証した後，
 対象言語に算術演算，if，letといったプリミティブを追加して証明の再利用性を評価する．
@@ -622,7 +632,7 @@ $\mathit{tactic}_1;\mathit{tactic}_2$と書くと二つのタクティックを�
 K正規化の正当性のように複雑な証明については変更を強いられたが，
 サブゴールについての場合分けを追加する事で対処が可能であった．
 
-\chapter{議論・関連研究}
+\section{議論・関連研究}
 本研究では束縛の表現にde Bruijnインデックスを用いたが，
 名前による束縛の表現の欠点を改善した他の手法として，
 パラメトリック高階抽象構文(PHOAS)\cite{Chlipala:2008:PHA:1411204.1411226}や
@@ -630,7 +640,7 @@ K正規化の正当性のように複雑な証明については変更を強い�
 
 ホスト言語の機能を用いた束縛の表現方法として，高階抽象構文(HOAS)が知られている．
 例えば，HOASによって束縛を表現した場合，$\lambda x.~x$を表す抽象構文木は
-\lstinline|Abs (fun x => x)|となる．
+%\lstinline|Abs (fun x => x)|となる．
 PHOASはHOASを発展させたものであり，
 Coqのような定理証明支援系に適用できなかった問題が修正されている．
 
@@ -660,7 +670,7 @@ PHOASを束縛の表現に用いた場合，
 これらの束縛の表現も比較検討したところ，de Bruijnインデックスが最も
 理論的な簡単さと証明の簡潔さのバランスに優れていると判断した．
 
-\chapter{結論}
+\section{結論}
 型なし$\lambda$計算に算術演算，if，letといったプリミティブを追加した，
 MinCamlのサブセットにあたる言語のK正規化の正当性をCoqで証明できた．
 その際de Buijnインデックス，余帰納的大ステップ意味論を採用した事により
@@ -674,7 +684,7 @@ MinCamlのサブセットにあたる言語のK正規化の正当性をCoqで証
 含むように対象言語を拡張し，
 MinCamlと同等なものにする必要がある．
 
-\chapter*{謝辞}
+\section*{謝辞}
 
 本論文を作成するにあたり，指導教員の住井教授にはお忙しい中貴重な時間を割いて頂き，丁寧かつ熱心なご指導を賜りました．
 ここに感謝の意を表します．
@@ -685,7 +695,7 @@ MinCamlと同等なものにする必要がある．
 研究で悩んだ事があればすぐに相談に乗ってくれた同級生の皆様に感謝いたします．
 
 %% 参考文献: bibtex
-\bibliographystyle{junsrt}
+\bibliographystyle{jssst}
 \bibliography{refs}
 
 \end{document}

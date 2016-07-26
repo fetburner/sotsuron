@@ -26,13 +26,13 @@
 \newcommand{\THEN}{\keyword{then}}
 \newcommand{\ELSE}{\keyword{else}}
 \newcommand{\LET}{\keyword{let}}
-\newcommand{\REC}{\keyword{rec}}
+\newcommand{\FIX}{\keyword{fix}}
 \newcommand{\ARRAY}{\keyword{Array}}
 \newcommand{\CREATE}{\keyword{create}}
 \newcommand{\AND}{\keyword{and}}
 \newcommand{\IN}{\keyword{in}}
-\newcommand{\WHILE}{\keyword{while}}
-\newcommand{\DO}{\keyword{do}}
+\newcommand{\FST}{\keyword{fst}}
+\newcommand{\SND}{\keyword{snd}}
 \newcommand{\DONE}{\keyword{done}}
 
 \begin{document}
@@ -100,7 +100,7 @@ higher-order functional programming languages
 with side effects (e.g. input/output) are rarely verified.
 This is due to difficulty of formalizing semantics for programs performing infinite input/output.
 We have mechanically verified K-normalization for call-by-value higher-order functional programs
-with external function calls that could possively cause side effects (e.g. input/output), 
+with external function calls that could possibly cause side effects (e.g. input/output), 
 recursive functions and pair by using the Coq proof assistant.
 K-normalization is a program conversion that names all subexpressions using "let",
 and its semantics are non-trivial due to binding manipulation.
@@ -169,17 +169,15 @@ MinCamlは一般的な関数型言語と同様に，整数，浮動小数点数�
 	\[ \begin{array}{lll}
 			e & ::= & \mbox{式} \\
 				& c	& \mbox{定数} \\
-			 	& \textit{op} (e_1,\cdots,e_n) & \mbox{算術演算} \\
+				& \textit{op} (e_1, e_2) & \mbox{算術演算} \\
 				& \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
 			 	& \LET~x=e_1~\IN~e_2 & \mbox{変数定義} \\
 				& x & \mbox{変数の読み出し} \\
-				& \LET~\REC~x~y_1~\cdots~y_n=e_1~\IN~e_2 & \mbox{再帰関数定義} \\
-				& e~e_1~\cdots~e_n & \mbox{関数呼び出し} \\
-				& (e_1,~\cdots~,e_n) & \mbox{組の作成} \\
-				& \LET~(x_1,~\cdots~,x_n)=e_1~\IN~e_2 & \mbox{組からの読み出し} \\
-				& \ARRAY.\CREATE~e_1~e_2 & \mbox{配列の作成} \\
-				& e_1.(e_2) & \mbox{配列からの読み出し} \\
-				& e_1.(e_2)\leftarrow e_3 & \mbox{配列への書き込み} \\
+				& \FIX~f~x.~e & \mbox{再帰関数} \\
+				& e_1~e_2 & \mbox{関数呼び出し} \\
+				& (e_1,e_2) & \mbox{二つ組の作成} \\
+				& \FST~e & \mbox{二つ組から一つ目の要素の読み出し} \\
+				& \SND~e & \mbox{二つ組から二つ目の要素の読み出し} \\
 	\end{array} \]
 %	\[ \begin{array}{lll}
 %			\tau & ::= & \mbox{型} \\
@@ -219,17 +217,15 @@ $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表
 	\[ \begin{array}{ll}
 			e & ::= \\
 				& c \\
-				& \textit{op}(x_1,\cdots,x_n) \\
-				& \IF~x=y~\THEN~e_1~\ELSE~e_2 \\
-				& \IF~x \leq y~\THEN~e_1~\ELSE~e_2 \\
+				& \textit{op}(x_1,x_2) \\
+				& \IF~x~\THEN~e_1~\ELSE~e_2 \\
 			 	& \LET~x=e_1~\IN~e_2 \\
 				& x \\
-				& \LET~\REC~x~y_1~\cdots~y_n=e_1~\IN~e_2 \\
-				& x~y_1~\cdots~y_n \\
-				& (x_1,~\cdots~,y_n) \\
-				& \LET~(x_1,~\cdots~,x_n)=y~\IN~e \\
-				& x.(y) \\
-				& x.(y)\leftarrow z
+				& \FIX~f~x.~e \\
+				& x~y \\
+				& (x,y) \\
+				& \FST~x \\
+				& \SND~x \\
 	\end{array} \]
 	\caption{MinCamlのK正規形}
 	\label{eqn:mincaml-knormal}

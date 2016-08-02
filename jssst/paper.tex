@@ -44,7 +44,7 @@
 % 和文論文の場合，姓と名の間には半角スペースを入れ，
 % 複数の著者の間は全角スペースで区切る
 %
-\author{水野 雅之
+\author{水野 雅之　住井 英二郎
 %
 % ここにタイトル英訳 (英文の場合は和訳) を書く．
 %
@@ -54,7 +54,7 @@
 % 所属 (和文および英文) を書く．
 % 複数著者の所属はまとめてよい．
 %
-\shozoku{Masayuki Mizuno}{東北大学大学院情報科学研究科}%
+\shozoku{Masayuki Mizuno, Eijiro Sumii}{東北大学大学院情報科学研究科}%
 {Graduate School of Information Sciences, Tohoku University}}
 
 % 指導教員のお名前
@@ -116,7 +116,6 @@ and we used de Bruijn indices. }
 %% 参考文献は \cite{ID} とします（ID は refs.bib 内で文献につけた識別子）
 %% BibTeX の使い方などは各自調べて下さい．
 
-\subsection{研究背景}
 プログラムのバグが計り知れない社会的損失をもたらす事は良く知られており，
 ソフトウェア開発においてデバッグは不可欠な存在となっている．
 中でもコンパイラのバグは深刻であり，
@@ -151,13 +150,6 @@ MinCamlのサブセットにあたる言語におけるK正規化処理の正当
 型なし$\lambda$計算を対象言語としたK正規化処理の正当性も検証し，
 対象言語に算術演算，if，letといったプリミティブを追加した場合と証明の行数を比較する．
 
-\section{MinCaml}
-MinCamlは住井による教育用コンパイラ\cite{DBLP:conf/icfp/Sumii05} \cite{MinCaml110006664764}である．
-これは値呼び戦略で，純粋でない言語機能を含む関数型言語を対象言語としている．
-また，OCamlで2000行程度の簡潔な実装ではあるが，
-型推論を行い，中間言語に変換した後に定数畳み込み等の最適化を行うといった
-現実の関数型言語処理系と共通した点を多数持っている．
-
 \subsection{対象言語}
 \figurename\ref{eqn:mincaml-ast}にMinCamlの抽象構文を示す．
 MinCamlは一般的な関数型言語と同様に，整数，浮動小数点数，真偽値，関数等のプリミティブを持ち，関数は第一級である．
@@ -189,19 +181,6 @@ MinCamlは一般的な関数型言語と同様に，整数，浮動小数点数�
 	\caption{MinCamlの抽象構文と型}
 	\label{eqn:mincaml-ast}
 \end{figure}
-
-\subsection{内部設計}
-MinCamlの対象言語とコンパイル先のアセンブリには多くの隔たりが存在するが，
-様々な中間言語を設定し，
-\begin{enumerate}
-	\item 型推論
-	\item K正規化
-	\item クロージャ変換
-	\item 仮想機械語生成
-	\item レジスタ割り当て
-\end{enumerate}
-という処理を順番に行うことにより，ギャップを一つずつ埋める設計になっている．
-これらの処理は疎結合になっているため，個別に検証した後に組み合わせる事も容易である．
 
 \subsection{K正規化}
 本研究ではMinCamlのコンパイルフェーズのうち，

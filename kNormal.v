@@ -14,6 +14,8 @@ Module Exp.
     | Int : nat -> t
     | Add : t -> t -> t
     | Sub : t -> t -> t
+    | Mul : t -> t -> t
+    | LE : t -> t -> t
     | Bool : bool -> t
     | If : t -> t -> t -> t
     | ExtVar : id -> t
@@ -30,6 +32,8 @@ Module Exp.
     | Int n => Int n
     | Add e1 e2 => Add (shift c d e1) (shift c d e2)
     | Sub e1 e2 => Sub (shift c d e1) (shift c d e2)
+    | Mul e1 e2 => Mul (shift c d e1) (shift c d e2)
+    | LE e1 e2 => LE (shift c d e1) (shift c d e2)
     | Bool b => Bool b
     | If e1 e2 e3 => If (shift c d e1) (shift c d e2) (shift c d e3)
     | ExtVar x => ExtVar x
@@ -93,6 +97,8 @@ Module Exp.
     | Int n => Int n
     | Add e1 e2 => Add (subst x es e1) (subst x es e2)
     | Sub e1 e2 => Sub (subst x es e1) (subst x es e2)
+    | Mul e1 e2 => Mul (subst x es e1) (subst x es e2)
+    | LE e1 e2 => LE (subst x es e1) (subst x es e2)
     | Bool b => Bool b
     | If e1 e2 e3 => If (subst x es e1) (subst x es e2) (subst x es e3)
     | ExtVar x => ExtVar x
@@ -295,6 +301,16 @@ Module Exp.
         evalto l2 e2 (Int n2) ->
         l = l1 ++ l2 ->
         evalto l (Sub e1 e2) (Int (n1 - n2))
+    | E_Mul : forall e1 e2 n1 n2 l1 l2 l,
+        evalto l1 e1 (Int n1) ->
+        evalto l2 e2 (Int n2) ->
+        l = l1 ++ l2 ->
+        evalto l (Mul e1 e2) (Int (n1 + n2))
+    | E_LE : forall e1 e2 n1 n2 l1 l2 l,
+        evalto l1 e1 (Int n1) ->
+        evalto l2 e2 (Int n2) ->
+        l = l1 ++ l2 ->
+        evalto l (LE e1 e2) (Int (n1 - n2))
     | E_Bool : forall b,
         evalto [] (Bool b) (Bool b)
     | E_IfTrue : forall e1 e2 e3 v2 l1 l2 l,
@@ -371,6 +387,22 @@ Module Exp.
         diverge l2 e2 ->
         l = tapp l1 l2 ->
         diverge l (Sub e1 e2)
+    | D_MulL : forall e1 e2 l1,
+        diverge l1 e1 ->
+        diverge l1 (Mul e1 e2)
+    | D_MulR : forall e1 e2 l1 l2 l v1,
+        evalto l1 e1 v1 ->
+        diverge l2 e2 ->
+        l = tapp l1 l2 ->
+        diverge l (Mul e1 e2)
+    | D_LEL : forall e1 e2 l1,
+        diverge l1 e1 ->
+        diverge l1 (LE e1 e2)
+    | D_LER : forall e1 e2 l1 l2 l v1,
+        evalto l1 e1 v1 ->
+        diverge l2 e2 ->
+        l = tapp l1 l2 ->
+        diverge l (LE e1 e2)
     | D_If : forall e1 e2 e3 l1,
         diverge l1 e1 ->
         diverge l1 (If e1 e2 e3)
@@ -378,7 +410,7 @@ Module Exp.
         evalto l1 e1 (Bool true) ->
         diverge l2 e2 ->
         l = tapp l1 l2 ->
-        diverge l (If e1 e2 e3) 
+        diverge l (If e1 e2 e3)
     | D_IfFalse : forall e1 e2 e3 l1 l3 l,
         evalto l1 e1 (Bool false) ->
         diverge l3 e3 ->
@@ -457,6 +489,8 @@ Module KNormal.
     | Int : nat -> t
     | Add : nat -> nat -> t
     | Sub : nat -> nat -> t
+    | Mul : nat -> nat -> t
+    | LE : nat -> nat -> t
     | Bool : bool -> t
     | If : nat -> t -> t -> t
     | ExtVar : id -> t
@@ -473,6 +507,8 @@ Module KNormal.
     | Int n => Int n
     | Add x y => Add (shift_var c d x) (shift_var c d y)
     | Sub x y => Sub (shift_var c d x) (shift_var c d y)
+    | Mul x y => Mul (shift_var c d x) (shift_var c d y)
+    | LE x y => LE (shift_var c d x) (shift_var c d y)
     | Bool b => Bool b
     | If x e2 e3 => If (shift_var c d x) (shift c d e2) (shift c d e3)
     | ExtVar x => ExtVar x
@@ -490,6 +526,8 @@ Module KNormal.
     | Int n => Exp.Int n
     | Add x y => Exp.Add (Exp.Var x) (Exp.Var y)
     | Sub x y => Exp.Sub (Exp.Var x) (Exp.Var y)
+    | Mul x y => Exp.Mul (Exp.Var x) (Exp.Var y)
+    | LE x y => Exp.LE (Exp.Var x) (Exp.Var y)
     | Bool b => Exp.Bool b
     | If x e2 e3 => Exp.If (Exp.Var x) (toExp e2) (toExp e3)
     | ExtVar x => Exp.ExtVar x
@@ -541,6 +579,14 @@ Module KNormal.
         Let (knormal e1)
           (Let (shift 0 1 (knormal e2))
             (Sub 1 0))
+    | Exp.Mul e1 e2 =>
+        Let (knormal e1)
+          (Let (shift 0 1 (knormal e2))
+            (Mul 1 0))
+    | Exp.LE e1 e2 =>
+        Let (knormal e1)
+          (Let (shift 0 1 (knormal e2))
+            (LE 1 0))
     | Exp.Bool b => Bool b
     | Exp.If e1 e2 e3 =>
         Let (knormal e1)
@@ -696,6 +742,8 @@ Module KNormal.
       | H : vknormal (Exp.Int _) _ |- _ => inversion H; clear H
       | H : vknormal (Exp.Add _ _) _ |- _ => inversion H
       | H : vknormal (Exp.Sub _ _) _ |- _ => inversion H
+      | H : vknormal (Exp.Mul _ _) _ |- _ => inversion H
+      | H : vknormal (Exp.LE _ _) _ |- _ => inversion H
       | H : vknormal (Exp.Bool _) _ |- _ => inversion H; clear H
       | H : vknormal (Exp.If _ _ _) _ |- _ => inversion H
       | H : vknormal (Exp.ExtVar _) _ |- _ => inversion H; clear H
@@ -780,7 +828,7 @@ Module KNormal.
               rewrite map_length;
               omega);
             exfalso; eauto
-          | rewrite nth_overflow in * by omega ]|]| | | | | | | | | | | |];
+          | rewrite nth_overflow in * by omega ]|]| | | | | | | | | | | | | |];
       inversion Hdiverge; subst;
       repeat (match goal with
       | |- context [Exp.subst_var _ _ _] => unfold Exp.subst_var in *

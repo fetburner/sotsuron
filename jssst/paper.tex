@@ -4,7 +4,7 @@
 \pagestyle {empty}
 
 \usepackage [dvipdfmx] {graphicx}
-\usepackage{amsmath,amssymb,amsfonts,ascmac,cases,bm}
+\usepackage{amsmath,amssymb,amsfonts,amsthm,ascmac,cases,bm}
 \usepackage{cite}
 \usepackage{enumitem}
 \usepackage{bussproofs}
@@ -34,6 +34,13 @@
 \newcommand{\FST}{\keyword{fst}}
 \newcommand{\SND}{\keyword{snd}}
 \newcommand{\DONE}{\keyword{done}}
+
+\newcommand{\theoremname}{定理}
+\newtheorem{theorem}{\theoremname}
+\newcommand{\lemmaname}{補題}
+\newtheorem{lemma}{\lemmaname}
+\newcommand{\propositioname}{命題}
+\newtheorem{proposition}{\propositioname}
 
 \begin{document}
 
@@ -91,7 +98,7 @@
 定理証明支援系Coqを用いて形式的に検証した．
 K正規化とは全ての中間式にlet式を用いて陽に名前を与えるプログラム変換であり，
 束縛の操作を伴う点で形式化が自明でない．
-本研究では，余帰納的大ステップ意味論によりプログラムの意味を外部関数呼び出しの無限列として与えた．
+本研究では，余帰納的大ステップ操作的意味論によりプログラムの意味を外部関数呼び出しの無限列として与えた．
 また，束縛の表現としては，他の手法と比較検討した上でde Bruijnインデックスを採用した．}
 
 \Eabstract{
@@ -134,12 +141,12 @@ CompCertにおける束縛の操作は限定的となっている．
 
 本研究と類似した，純粋でない関数型プログラミング言語を対象言語としたコンパイラの検証には
 Lambda Tamer\cite{ImpurePOPL10}が挙げられる．
-その対象言語は高階関数，参照，二つ組といった，副作用を扱える高階関数型プログラミング言語に一般的な機能を有している一方，
+その対象言語は高階関数，参照，二つ組といった，副作用を扱える関数型プログラミング言語に一般的な機能を有している一方，
 入出力の機能はサポートされていない．
 
 \subsection{本研究の貢献}
 本研究でK正規化を検証するにあたって，先に挙げたような入出力や高階関数のみならず，
-再帰関数や二つ組も扱えるような値呼びの関数型プログラミング言語をソース言語とした．
+再帰関数や二つ組も扱えるような値呼びの高階関数型プログラミング言語をソース言語とした．
 これは，MLのような現実的に用いられている言語の処理系を検証する上での問題点を分析するためであり，
 実際に束縛の表現や意味論の定義，証明手法を選定する際それらの言語機能が大きな影響を及ぼす事となった．
 
@@ -151,14 +158,16 @@ Lambda Tamer\cite{ImpurePOPL10}が挙げられる．
 コンパイラの正当性は入力されたプログラムと出力されるプログラムが等価である事に相当するため，
 コンパイラを形式的に検証するためには対象言語の意味を定めなくてはならない．
 意味論も束縛の表現や証明手法に影響を及ぼしているが，
-本研究では対象言語の意味を定めるために余帰納的大ステップ意味論を採用した．
+本研究では対象言語の意味を定めるために余帰納的大ステップ操作的意味論を採用した．
 これも証明手法の簡潔さや証明スクリプトの短さに寄与している．
 
 \section{対象言語}
-本研究におけるK正規化のソース言語の文法は\figurename\ref{eqn:mincaml-ast}のように表される．
-前に述べた入出力、再帰関数や二つ組だけでなく，整数，真偽値，算術演算，ifやletといったプリミティブも持ち，関数は第一級である．
-入出力専用の構文は存在しないが，自由変数に対する関数呼び出しは外部関数の呼び出しと見なされ，
+本研究におけるK正規化のソース言語の構文は\figurename\ref{eqn:mincaml-ast}のように表される．
+前に述べた入出力，再帰関数や二つ組だけでなく，整数，真偽値，算術演算，ifやletといったプリミティブも持ち，関数は第一級である．
+算術演算は加算，減算，乗算と比較演算が実装されているが，これ以外のプリミティブを追加する事も容易である．
+入出力専用の構文は存在しないが，自由変数に対する関数呼び出しは外部関数の呼び出しとみなされ，
 外部関数が入出力を行う事を許しているため，ソース言語は入出力を扱える特徴がある．
+ただし，簡単化のために外部関数は整数を受け取って整数を返すものに限定している．
 
 \begin{figure}[htbp]
 	\[ \begin{array}{lll}
@@ -172,65 +181,53 @@ Lambda Tamer\cite{ImpurePOPL10}が挙げられる．
 				& e_1~e_2 & \mbox{関数呼び出し} \\
 				& (e_1,~e_2) & \mbox{二つ組の作成} \\
 				& \#_i~e & \mbox{射影}(i \in \{0, 1\}) \\
+			v & ::= & \mbox{値} \\
+				& c & \mbox{定数} \\
+				& x & \mbox{外部関数} \\
+				& \FIX~f~x.~e & \mbox{再帰関数} \\
+				& (v_1,~v_2) & \mbox{二つ組} \\
 	\end{array} \]
-%	\[ \begin{array}{lll}
-%			\tau & ::= & \mbox{型} \\
-%					 & \pi & \mbox{プリミティブ型} \\
-%					 & \tau_1 \rightarrow \cdots \rightarrow \tau_n \rightarrow \tau & \mbox{関数型} \\
-%					 & \tau_1 \times \cdots \times \tau_n & \mbox{組型} \\
-%					 & \tau~\mathbf{array} & \mbox{配列型}
-%	\end{array} \]
-	\caption{MinCamlの抽象構文と型}
+	\caption{ソース言語の抽象構文}
 	\label{eqn:mincaml-ast}
 \end{figure}
 
 \section{K正規化}
-本研究ではMinCamlのコンパイルフェーズのうち，
-束縛の付け替えが伴う非自明なプログラム変換であるK正規化処理に注目する．
-K正規化とは，型推論を経て明示的に型が付いた言語を中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作を指し，
+本研究ではコンパイラが行う処理のうち，
+束縛の付け替えが伴う非自明なプログラム変換であるK正規化に注目する．
+K正規化とは，与えられたプログラムを中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作を指し，
 直観的には全ての部分式を変数に束縛して名前を付けた形式に相当する．
-\figurename\ref{eqn:mincaml-knormal}にMinCamlのK正規形の抽象構文を示す．
-
-例えば，$e_1$のK正規形は$K(e_1)$，$e_2$のK正規形は$K(e_2)$とすると，
+例えば，式$e$のK正規形を$K(e)$書くことにすると，
 $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表される．
+\figurename\ref{eqn:mincaml-knormal}にK正規形の抽象構文を示す．
 
 \begin{figure}[htbp]
 	\[ \begin{array}{ll}
 			e & ::= \\
 				& c \\
-				& \textit{op}(x_1,x_2) \\
+				& x_1 \odot x_2 \\
 				& \IF~x~\THEN~e_1~\ELSE~e_2 \\
 			 	& \LET~x=e_1~\IN~e_2 \\
 				& x \\
 				& \FIX~f~x.~e \\
 				& x~y \\
-				& (x,y) \\
-				& \FST~x \\
-				& \SND~x \\
+				& (x,~y) \\
+				& \#_i~x 
 	\end{array} \]
-	\caption{MinCamlのK正規形}
+	\caption{K正規形の抽象構文}
 	\label{eqn:mincaml-knormal}
 \end{figure}
 
-実際のMinCamlではK正規化と同時に様々なプログラム変換が行われているが，
-本論文では簡単化のために扱わない．
-%例えば，$x+y$のような式をK正規化した際に$\LET~x_1=y~\IN~\LET~x_2=z~\IN~x_1+x_2$ではなく$x+y$となるよう，MinCamlでは簡単な最適化も同時に行われている．
-%また，if式を$\IF~x=y~\THEN~e_1~\ELSE~e_2$と$\IF~x \leq y~\THEN~e_1~\ELSE~e_2$のどちらかに変換もしている．
+\section{束縛の表現}
+Coqを用いてK正規化を形式的に検証するためには，まず対象言語の構文をCoq上で定義しなくてはならない．
+その際束縛をどのように表現するかは意味論の定義，ひいてはK正規化の正当性の証明にも関わるため，
+束縛の表現を適切に選択する事によって証明を簡潔にする事もできる．
 
-\section{構文の定義}
-Coqを用いてK正規化の正当性を証明するためには，まず対象言語の構文をCoq上で定義しなくてはならない．
-対象言語の構文は意味論の定義，ひいてはK正規化の正当性の証明にも関わるため，
-構文を適切に定義する事によって証明を簡潔にできる．
-
-\subsection{名前による束縛の表現の問題点}
-定理証明支援系をを用いてコンパイラの検証をする際，
-構文の定義の中でもとりわけ検証の難易度を左右するのが束縛の表現方法である．
-紙の上で定式化を行う場合，束縛の表現方法として最も良く用いられるのは名前による表現と考えられる．
-
-しかし，定理証明支援系を用いて検証を行う際，名前による束縛の表現には問題点が多い．
+\subsection{名前による束縛の表現}
+紙の上で定式化を行う場合，束縛の表現方法として最も良く用いられるのは名前による表現と考えられるが，
+定理証明支援系を用いて検証を行う際，名前による束縛の表現には問題点が多い．
 名前による表現では構文的に等価な式以外にも，
 $\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように変数名を付け替えた式同士も等価な式とみなして扱う必要がある．
-このような$\alpha$等価性を定式化し，関連する補題を証明する負担が無視できない．
+定理証明支援系ではこのような$\alpha$等価性も定式化し厳密に扱わなければならないため，関連する補題を証明する負担が無視できない．
 
 また，$[x \mapsto z](\lambda z.~x)$のような代入を単純に計算すると$\lambda z.~z$となるが，
 これでは代入された$z$に対応している束縛が変わってしまう．
@@ -238,21 +235,19 @@ $\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように変数名を付�
 これも定理証明支援系を用いて定式化する場合に煩雑となる．
 
 \subsection{de Bruijnインデックス}
-このような名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックス\cite{Pierce:TypeSystems}が挙げられる．
-これは変数の位置から数えて何番目の束縛に対応するかで束縛を表現するものである．
+名前による表現の欠点を改善した束縛の表現方法として，de Bruijnインデックス\cite{Pierce:TypeSystems}が挙げられる．
+これは変数が何番目の束縛に対応するかで束縛を表現するものである．
 例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x~z~(y~z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
 
 名前による表現では構文的に等価な式以外にも，$\alpha$等価な式も等価として扱わなければならなかった．
 一方de Bruijnインデックスでは$\alpha$等価な式は全て構文的に等価となるため，定理証明支援系での扱いに適する．
 例えば，$\lambda x.\lambda y.~x$と$\lambda a.\lambda b.~a$のように$\alpha$等価な式は，
 de Bruijnインデックスで表現するとどちらも$\lambda.\lambda.~1$となる．
-
 また，束縛の表現に変数名を用いないため，
-変数名の選び方によって束縛の対応関係が変わる事も無い．
+変数名の選び方によって束縛の対応関係が変わる事もない．
 
 de Bruijnインデックスで束縛を表現した場合に用いられる操作の一つに，シフトが存在する．
 これは直観的には全ての自由変数のインデックスを指定されただけずらす事に相当する．
-
 シフトが必要になる場面として，束縛に関する操作が挙げられる．
 例えば，名前による表現では$(\lambda x.~x)~(\lambda x.~y)$に相当するde Bruijnインデックスで束縛を表現した式をK正規化する事を考える．
 名前による表現では，変数名を慎重に選べば$\LET~a = \lambda x.~x~\IN~\LET~b = \lambda x.~y~\IN~a~b$
@@ -264,352 +259,222 @@ de Bruijnインデックスで束縛を表現した場合に用いられる操�
 \[ 
 	\begin{array}{l}
 		\LET~\_ = \lambda.~0~\IN~\LET~\_ = \uparrow^1(\lambda.~1)~\IN~1~0 \\
-		= (\LET~\_ = \lambda.~0~\IN~\LET~\_ = \lambda.~2~\IN~1~0) \\
+		\approx \LET~\_ = \lambda.~0~\IN~\LET~\_ = \lambda.~2~\IN~1~0 \\
 	\end{array}
 \]
 となる．
 
-\subsection{対象言語の構文の定義}
-本研究における対象言語はMinCamlのサブセットに相当するが，
-MinCamlのサブセットのままでは意味論の定義に適さない部分がある．
-次章で定義するような環境を用いない大ステップ意味論では，
-値は式のサブセットである必要が生じる．
-しかし，MinCamlには再帰関数の定義を行う構文はあるものの，
-関数の値に相当する構文が存在せずこれを満たさない．
-
-従って，本研究で扱う対象言語では再帰関数の定義を行う構文に代わって，
-匿名関数を表す構文を導入する．
-\figurename\ref{eqn:target-language-ast}に本研究の対象言語の抽象構文を示す．
-
-\begin{figure}[htbp]
-	\[ \begin{array}{lll}
-			e & ::= & \mbox{式} \\
-				& c	& \mbox{定数} \\
-			 	& \textit{op} (e_1,\cdots,e_n) & \mbox{算術演算} \\
-				& \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
-			 	& \LET~\_=e_1~\IN~e_2 & \mbox{変数定義} \\
-				& k & \mbox{変数(インデックスで表現)} \\
-				& \lambda.~e & \mbox{匿名関数} \\
-				& e_1~e_2 & \mbox{関数呼び出し} \\
-	\end{array} \]
-	\[ \begin{array}{lll}
-			v & ::= & \mbox{値} \\
-				& c	& \mbox{定数} \\
-				& \lambda.~e & \mbox{関数} \\
-	\end{array} \]
-	\caption{本研究で扱う対象言語の抽象構文}
-	\label{eqn:target-language-ast}
-\end{figure}
-
-また，本研究の対象言語におけるシフト$\uparrow^d e$の定義を\figurename\ref{eqn:target-shift}，
-並列代入$[k\mapsto \overline{e}]e$の定義を\figurename\ref{eqn:target-subst}に示す．
-\begin{figure}[htbp]
-	\[ \begin{array}{lll}
-			\uparrow^d_\mathcal{C} c & = & c \\
-			\uparrow^d_\mathcal{C} (\textit{op} (e_1,\cdots,e_n)) & = & \textit{op} (\uparrow^d_\mathcal{C} e_1,\cdots,\uparrow^d_\mathcal{C} e_n) \\
-			\uparrow^d_\mathcal{C} (\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \IF~\uparrow^d_\mathcal{C} e_1~\THEN~\uparrow^d_\mathcal{C} e_2~\ELSE~\uparrow^d_\mathcal{C} e_3 \\
-			\uparrow^d_\mathcal{C} (\LET~\_=e_1~\IN~e_2) & = & \LET~\_=\uparrow^d_\mathcal{C} e_1~\IN~\uparrow^d_{\mathcal{C} + 1}e_2 \\
-			\uparrow^d_\mathcal{C} k & = & \left \{ \begin{array}{ll} k & k < \mathcal{C} \\ k + d & \mbox{otherwise} \end{array} \right. \\
-			\uparrow^d_\mathcal{C} (\lambda.~e) & = & \lambda.~\uparrow^d_{\mathcal{C}+1} e \\
-			\uparrow^d_\mathcal{C} (e_1~e_2) & = & (\uparrow^d_\mathcal{C} e_1)~(\uparrow^d_\mathcal{C} e_2)
-	\end{array} \]
-	\caption{シフトの定義}
-	\label{eqn:target-shift}
-\end{figure}
-
-\begin{figure}[htbp]
-	\[ \begin{array}{lll}
-			[k \mapsto \overline{e}]c & = & c \\
-			\left[k \mapsto \overline{e}\right] (\textit{op} (e_1, \cdots , e_n)) & = & \textit{op} ([k \mapsto \overline{e}]e_1,\cdots , [k \mapsto \overline{e}]e_n) \\
-			\left[k \mapsto \overline{e}\right](\IF~e_1~\THEN~e_2~\ELSE~e_3) & = &  \IF~[k \mapsto \overline{e}]e_1~\THEN~[k \mapsto \overline{e}]e_2~\ELSE~[k \mapsto \overline{e}]e_3 \\
-			\left[k \mapsto \overline{e}\right](\LET~\_=e_1~\IN~e_2) & = & \LET~\_=[k \mapsto \overline{e}]e_1~\IN~[k + 1 \mapsto \overline{e}]e_2 \\
-		\left[k \mapsto \overline{e}\right]k' & = & \left\{ \begin{array}{ll} k' & k' < k \\ \uparrow^k \overline{e}_{k'-k} & k \leq k' \land k' < k + |\overline{e}| \\ k' - |\overline{e}| & \mbox{otherwise} \end{array} \right. \\
-			\left[k \mapsto \overline{e}\right](\lambda.~e) & = & \lambda.~[k + 1 \mapsto \overline{e}]e \\
-			\left[k \mapsto \overline{e}\right](e_1~e_2) & = & ([k \mapsto \overline{e}]e_1)~([k \mapsto \overline{e}]e_2) \\
-	\end{array} \]
-	\caption{代入の定義}
-	\label{eqn:target-subst}
-\end{figure}
-
-前にも見たように，シフトを用いる事でK正規化を実装する事が出来る．
-式$e$のK正規化$K(e)$の実装を\figurename\ref{eqn:target-knormal}に示す．
-\begin{figure}[htbp]
-	\[ \begin{array}{lll}
-			K(c) & = & c \\
-			K(\textit{op} (e_1, \cdots , e_n)) & = & \\
-																					& & \LET~\_=K(e_1)~\IN \\
-																 & & \LET~\_=\uparrow^1 K(e_2)~\IN \\
-													 & & \vdots \\
-											& & \LET~\_=\uparrow^{n-1}K(n)~\IN \\
-											& & \textit{op} (n-1, \cdots, 0) \\
-			K(\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \LET~\_=K(e_1)~\IN~\IF~0~\THEN~K(e_2)~\ELSE~K(e_3) \\
-			K(\LET~\_=e_1~\IN~e_2) & = & \LET~\_=K(e_1)~\IN~K(e_2) \\
-			K(k) & = & k \\
-			K(\lambda.~e) & = & \lambda.~K(e) \\
-			K(e_1~e_2) & = & \LET~\_=K(e_1)~\IN~\LET~\_=K(e_2)~\IN~1~0
-	\end{array} \]
-	\caption{K正規化の定義}
-	\label{eqn:target-knormal}
-\end{figure}
+%また，本研究の対象言語におけるシフト$\uparrow^d e$の定義を\figurename\ref{eqn:target-shift}，
+%並列代入$[k\mapsto \overline{e}]e$の定義を\figurename\ref{eqn:target-subst}に示す．
+%\begin{figure}[htbp]
+%	\[ \begin{array}{lll}
+%			\uparrow^d_\mathcal{C} c & = & c \\
+%			\uparrow^d_\mathcal{C} (e_1 \odot e_2) & = & \uparrow^d_\mathcal{C} e_1~\odot~\uparrow^d_\mathcal{C} e_2 \\
+%			\uparrow^d_\mathcal{C} (\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \IF~\uparrow^d_\mathcal{C} e_1~\THEN~\uparrow^d_\mathcal{C} e_2~\ELSE~\uparrow^d_\mathcal{C} e_3 \\
+%			\uparrow^d_\mathcal{C} (\LET~\_=e_1~\IN~e_2) & = & \LET~\_=\uparrow^d_\mathcal{C} e_1~\IN~\uparrow^d_{\mathcal{C} + 1}e_2 \\
+%			\uparrow^d_\mathcal{C} k & = & \left \{ \begin{array}{ll} k & k < \mathcal{C} \\ k + d & \mbox{otherwise} \end{array} \right. \\
+%			\uparrow^d_\mathcal{C} (\lambda.~e) & = & \lambda.~\uparrow^d_{\mathcal{C}+1} e \\
+%			\uparrow^d_\mathcal{C} (e_1~e_2) & = & (\uparrow^d_\mathcal{C} e_1)~(\uparrow^d_\mathcal{C} e_2)
+%	\end{array} \]
+%	\caption{シフトの定義}
+%	\label{eqn:target-shift}
+%\end{figure}
+%
+%\begin{figure}[htbp]
+%	\[ \begin{array}{lll}
+%			[k \mapsto \overline{e}]c & = & c \\
+%			\left[k \mapsto \overline{e}\right] (\textit{op} (e_1, \cdots , e_n)) & = & \textit{op} ([k \mapsto \overline{e}]e_1,\cdots , [k \mapsto \overline{e}]e_n) \\
+%			\left[k \mapsto \overline{e}\right](\IF~e_1~\THEN~e_2~\ELSE~e_3) & = &  \IF~[k \mapsto \overline{e}]e_1~\THEN~[k \mapsto \overline{e}]e_2~\ELSE~[k \mapsto \overline{e}]e_3 \\
+%			\left[k \mapsto \overline{e}\right](\LET~\_=e_1~\IN~e_2) & = & \LET~\_=[k \mapsto \overline{e}]e_1~\IN~[k + 1 \mapsto \overline{e}]e_2 \\
+%		\left[k \mapsto \overline{e}\right]k' & = & \left\{ \begin{array}{ll} k' & k' < k \\ \uparrow^k \overline{e}_{k'-k} & k \leq k' \land k' < k + |\overline{e}| \\ k' - |\overline{e}| & \mbox{otherwise} \end{array} \right. \\
+%			\left[k \mapsto \overline{e}\right](\lambda.~e) & = & \lambda.~[k + 1 \mapsto \overline{e}]e \\
+%			\left[k \mapsto \overline{e}\right](e_1~e_2) & = & ([k \mapsto \overline{e}]e_1)~([k \mapsto \overline{e}]e_2) \\
+%	\end{array} \]
+%	\caption{代入の定義}
+%	\label{eqn:target-subst}
+%\end{figure}
+%
+%前にも見たように，シフトを用いる事でK正規化を実装する事が出来る．
+%式$e$のK正規化$K(e)$の実装を\figurename\ref{eqn:target-knormal}に示す．
+%\begin{figure}[htbp]
+%	\[ \begin{array}{lll}
+%			K(c) & = & c \\
+%			K(\textit{op} (e_1, \cdots , e_n)) & = & \\
+%																					& & \LET~\_=K(e_1)~\IN \\
+%																 & & \LET~\_=\uparrow^1 K(e_2)~\IN \\
+%													 & & \vdots \\
+%											& & \LET~\_=\uparrow^{n-1}K(n)~\IN \\
+%											& & \textit{op} (n-1, \cdots, 0) \\
+%			K(\IF~e_1~\THEN~e_2~\ELSE~e_3) & = & \LET~\_=K(e_1)~\IN~\IF~0~\THEN~K(e_2)~\ELSE~K(e_3) \\
+%			K(\LET~\_=e_1~\IN~e_2) & = & \LET~\_=K(e_1)~\IN~K(e_2) \\
+%			K(k) & = & k \\
+%			K(\lambda.~e) & = & \lambda.~K(e) \\
+%			K(e_1~e_2) & = & \LET~\_=K(e_1)~\IN~\LET~\_=K(e_2)~\IN~1~0
+%	\end{array} \]
+%	\caption{K正規化の定義}
+%	\label{eqn:target-knormal}
+%\end{figure}
 
 \section{意味論}\label{section:semantics}
-コンパイラの正当性を検証する際には対象言語の意味論を定義する必要がある．
-MinCamlの意味論は形式的に定義されていないため，
-本研究ではMinCamlの非形式的な意味論を基に対象言語の意味論を定義する．
 
-\subsection{大ステップ操作的意味論の問題点}
+\subsection{大ステップ操作的意味論}
 本研究の対象言語の意味論を定義するにあたって，
 大ステップ操作的意味論を採用する事にする．
 大ステップ操作的意味論の評価規則は構文とほぼ一対一に対応しており，
 比較的単純なプログラム変換の検証には小ステップ操作的意味論より適している．
-本研究の対象言語の評価規則を\figurename\ref{eqn:target-eval}に示す．
+本研究では入出力を扱うために，評価の際に行った入出力の列によって一般的な大ステップ操作的意味論を拡張した．
+対象言語の評価規則の一部を\figurename\ref{eqn:target-eval}に示す．
+大ステップ操作的意味論を採用しているため代入の代わりに環境を用いて対象言語の意味を定義する事もできるが．
+環境を用いた場合は形式的検証の際にクロージャ同士の等価性の議論が煩雑になるため本研究では代入を用いた意味論を採用した．
 
 \begin{figure}[htbp]
 	\begin{prooftree}
 		\AxiomC{}
-		\RightLabel{\textsc{E-Const}}
-		\UnaryInfC{$c \Downarrow c$}
+		\RightLabel{\textsc{E-Fix}}
+		\UnaryInfC{$\FIX .~e \Downarrow \FIX .~e~/~\epsilon$}
+	\end{prooftree}
+	\medskip
+	\begin{prooftree}
+		\AxiomC{$e_1 \Downarrow \FIX .~e~/~t_1$}
+		\noLine
+		\UnaryInfC{$e_2 \Downarrow v_2~/~t_2$}
+		\noLine
+		\UnaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
+		\RightLabel{\textsc{E-AppFix}}
+		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1~t_2~t_3$}
 	\end{prooftree}
 	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow v_1~\cdots~e_n \Downarrow v_n$}
-		\AxiomC{$\textit{op}(v_1,\cdots,v_n)=v$}
-		\RightLabel{\textsc{E-Op}}
-		\BinaryInfC{$\textit{op} (e_1,\cdots,e_n) \Downarrow v$}
+		\AxiomC{$e_1 \Downarrow x~/~t_1$}
+		\AxiomC{$e_2 \Downarrow n~/~t_2$}
+		\RightLabel{\textsc{E-AppExtVar}}
+		\BinaryInfC{$e_1~e_2 \Downarrow m~/~t_1~t_2~.~x(n)=m$}
 	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \TRUE$}
-		\AxiomC{$e_2 \Downarrow v$}
-		\RightLabel{\textsc{E-IfTrue}}
-		\BinaryInfC{$\IF~e_1~\THEN~e_2~\ELSE~e_3 \Downarrow v$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \FALSE$}
-		\AxiomC{$e_3 \Downarrow v$}
-		\RightLabel{\textsc{E-IfFalse}}
-		\BinaryInfC{$\IF~e_1~\THEN~e_2~\ELSE~e_3 \Downarrow v$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow v_1$}
-		\AxiomC{$[0 \mapsto v_1]e_2 \Downarrow v$}
-		\RightLabel{\textsc{E-Let}}
-		\BinaryInfC{$\LET~\_=e_1~\IN~e_2 \Downarrow v$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{}
-		\RightLabel{\textsc{E-Abs}}
-		\UnaryInfC{$\lambda.~e \Downarrow \lambda.~e$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \lambda.~e$}
-		\AxiomC{$e_2 \Downarrow v_2$}
-		\AxiomC{$[0\mapsto v_2]e \Downarrow v$}
-		\RightLabel{\textsc{E-App}}
-		\TrinaryInfC{$e_1~e_2 \Downarrow v$}
-	\end{prooftree}
-	\caption{本研究の対象言語の評価規則}
+	\caption{本研究における対象言語の評価規則の一部}
 	\label{eqn:target-eval}
 \end{figure}
 
-その一方で，停止しない評価と行き詰まり状態の区別が困難である問題がある．
+一方で，停止しない評価と行き詰まり状態の区別が困難である問題がある．
 例えば，\figurename\ref{eqn:target-eval}で定義した意味論では，
-適用できる規則が存在しないため，$\forall v.~\TRUE~\TRUE \not \Downarrow v$が成り立つ．
-一方，帰納的定義では無限に導出規則が続くような命題は導出できないため，
-$\forall v.~(\lambda x.~x)~(\lambda x.~y) \not \Downarrow v$が成り立つ．
-このように，関係$e \Downarrow v$だけでは停止しない評価と行き詰まり状態を区別できない．
+適用できる規則が存在しないため，$\TRUE~\TRUE \Downarrow v~/~t$となるような$v$及び$t$は存在しない．
+また，帰納的定義では無限に導出規則が続くような導出は許さないため，
+$(\FIX.~0~1)~\TRUE \Downarrow v~/~t$となるようなも$v$及び$t$も存在しない．
+このように，関係$e \Downarrow v~/~t$だけでは停止しない評価と行き詰まり状態を区別できない．
+入出力が存在しない言語であれば適切な型システム等によって
+行き詰まり状態が起こらないように言語を設計しても停止しない評価と行き詰まり状態を区別できない問題は解消できる．
+しかし，入出力が存在する言語では評価が停止しないプログラム同士も入出力の内容で比較する必要があり，
+行き詰まり状態が起こらないようにしただけでは解決しない．
 
-\subsection{余帰納的大ステップ意味論}
+\subsection{余帰納的大ステップ操作的意味論}
 大ステップ操作的意味論においても停止しない評価と行き詰まり状態を区別する試みとして，
-LeroyとGrallによって余帰納的大ステップ意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
+LeroyとGrallによって余帰納的大ステップ操作的意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
 これは，評価が停止しない事を表す述語を余帰納的に定義する事で，
 従来の評価規則を補うものである．
 
-余帰納的大ステップ意味論を用いた本研究の対象言語の評価規則を\figurename\ref{eqn:target-diverge}に示す．
-
+余帰納的大ステップ操作的意味論を用いた本研究における対象言語の評価規則の一部を\figurename\ref{eqn:target-diverge}に示す．
 \begin{figure}[htbp]
 	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow v_1~\cdots~e_m \Uparrow$}
-		\RightLabel{\textsc{D-Op}}
-		\doubleLine
-		\UnaryInfC{$\textit{op} (e_1,\cdots,e_n) \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1\Uparrow$}
-		\RightLabel{\textsc{D-If}}
-		\doubleLine
-		\UnaryInfC{$\IF~e_1~\THEN~e_2~\ELSE~e_3 \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \TRUE$}
-		\AxiomC{$e_2 \Uparrow$}
-		\RightLabel{\textsc{D-IfTrue}}
-		\doubleLine
-		\BinaryInfC{$\IF~e_1~\THEN~e_2~\ELSE~e_3 \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \FALSE$}
-		\AxiomC{$e_3 \Uparrow$}
-		\RightLabel{\textsc{D-IfFalse}}
-		\doubleLine
-		\BinaryInfC{$\IF~e_1~\THEN~e_2~\ELSE~e_3 \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Uparrow$}
-		\RightLabel{\textsc{D-LetL}}
-		\doubleLine
-		\UnaryInfC{$\LET~\_=e_1~\IN~e_2 \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow v_1$}
-		\AxiomC{$[0 \mapsto v_1]e_2 \Uparrow$}
-		\RightLabel{\textsc{D-LetR}}
-		\doubleLine
-		\BinaryInfC{$\LET~\_=e_1~\IN~e_2 \Uparrow$}
-	\end{prooftree}
-	\begin{prooftree}
-		\AxiomC{$e_1 \Uparrow$}
+		\AxiomC{$e_1 \Uparrow /~T_1$}
 		\RightLabel{\textsc{D-AppL}}
 		\doubleLine
-		\UnaryInfC{$e_1~e_2 \Uparrow$}
+		\UnaryInfC{$e_1~e_2 \Uparrow /~T_1$}
 	\end{prooftree}
 	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \lambda.~e$}
-		\AxiomC{$e_2 \Uparrow$}
+		\AxiomC{$e_1 \Downarrow \FIX.~e~/~t_1$}
+		\AxiomC{$e_2 \Uparrow /~ T_2$}
 		\RightLabel{\textsc{D-AppR}}
 		\doubleLine
-		\BinaryInfC{$e_1~e_2 \Uparrow$}
+		\BinaryInfC{$e_1~e_2 \Uparrow /~t_1~T_2$}
 	\end{prooftree}
+	\medskip
 	\begin{prooftree}
-		\AxiomC{$e_1 \Downarrow \lambda.~e$}
-		\AxiomC{$e_2 \Downarrow v_2$}
-		\AxiomC{$[0\mapsto v_2]e \Uparrow$}
+		\AxiomC{$e_1 \Downarrow \FIX.~e~/~t_1$}
+		\noLine
+		\UnaryInfC{$e_2 \Downarrow v_2~/~t_2$}
+		\noLine
+		\UnaryInfC{$[0 \mapsto \FIX~e,~1\mapsto v_2]e \Uparrow / ~T_3$}
 		\RightLabel{\textsc{D-App}}
 		\doubleLine
-		\TrinaryInfC{$e_1~e_2 \Uparrow$}
+		\UnaryInfC{$e_1~e_2 \Uparrow/~t_1~t_2~T_3$}
 	\end{prooftree}
-	\caption{余帰納的大ステップ意味論による本研究の対象言語の評価規則}
+	\caption{余帰納的大ステップ操作的意味論を用いた本研究における対象言語の評価規則の一部}
 	\label{eqn:target-diverge}
 \end{figure}
-
-これらの規則を用いると，余帰納的定義では無限回の規則適用が可能なため，
-$(\lambda x.x x)(\lambda x.x x) \Uparrow$が成り立つ．
-一方，適用できる規則が存在しないため，$\TRUE~\TRUE \not \Uparrow$が成り立つ．
+これらの規則を用いると，余帰納的定義では無限回の規則適用が可能なため
+$(\FIX .~0~1)~\TRUE \Uparrow/~\epsilon$が成り立つ．
+一方，適用できる規則が存在しないため$\TRUE~\TRUE \Uparrow/~T$となるような$T$は存在しない．
 このように，停止しない評価と行き詰まり状態を区別できる．
+加えて，本研究では評価の際に行った入出力の列によって意味を拡張しており，
+評価が停止しないプログラム同士も行った入出力の内容で区別できる．
 
 \section{Coqによる形式的検証}
-本研究で扱う対象言語の構文及び意味論が定義できたため，
-Coqを用いてK正規化の正当性を形式的に検証する．
-その際，Coqの証明自動化機能を活用することによって証明が対象言語に対してスケールするよう図る．
-また，型無し$\lambda$計算におけるK正規化の正当性も証明し，
-証明に要したスクリプトの行数を比較する事により，
-実際のスケーラビリティの評価を行う．
-
-\subsection{対象言語やK正規化におけるメタ定理}
-Coqによって正当性を検証するにあたって，
-K正規化処理で期待される正当性はどのような命題で表されるか，
-その命題はどのようにして証明すれば良いかについて考える．
-
-\subsubsection{シフト及び代入についてのメタ定理}
-シフト及び代入について，以下のようなメタ定理が成り立つ．
-\begin{itemize}
-	\item $\forall c~e.~\uparrow^0_c e = e$
-	\item $\forall c~c'~d~d'~e.~c \leq c' \leq c + d \Longrightarrow \uparrow^{d'}_{c'} \uparrow^d_c e = \uparrow^{d+d'}_c e$
-	\item $\forall c~c'~d~d'~e.~c' \leq c \Longrightarrow \uparrow^{d'}_{c'} \uparrow^d_c e = \uparrow^{d}_{d'+ c} \uparrow^{d'}_{c'} e$
-	\item $\forall c~d~e~k~\overline{e}.~c \leq k \Longrightarrow \uparrow^d_c [k \mapsto \overline{e}] e = [d + k \mapsto \overline{e}] \uparrow^d_c e$
-	\item $\forall c~d~e~k.~c \leq k \land |\overline{e}| + k \leq d + c \Longrightarrow [x \mapsto |\overline{e}| ] \uparrow^d_c e = \uparrow^{d-|\overline{e}|}_c e$
-\end{itemize}
-
-これらは式eについての帰納法と大小比較についての場合分けで証明できる．
-
-大ステップ操作的意味論においては代入の代わりに環境を用いて意味論を定義する事もできるが，
-その場合クロージャが存在するために同様の補題を定義するのが難しい．
-従って，本研究では代入を用いた大ステップ操作的意味論によって対象言語の意味論を定義する．
-
-\subsubsection{K正規化の正当性}
 K正規化に期待される性質について考える．
+K正規形はソース言語のサブセットになっているが，
+値呼びの評価戦略では関数抽象の中は簡約されないため
+K正規後のプログラムはK正規化前のプログラムと厳密には等価ではない．
+従って，プログラムの振る舞いに注目して性質が保存されているかどうかを検討する．
+一般的なコンパイラでは与えられたプログラムは最終的に命令の列に変換される事を考慮すると
+\theoremname\ref{theorem:eval-correctness}と\theoremname\ref{theorem:diverge-correctness}が期待される．
+\begin{theorem}\label{theorem:eval-correctness}
+	$e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow v'~/~t$が成り立ち．
+	$v$が数値ならば$v=v'$となる
+\end{theorem}
+\begin{theorem}\label{theorem:diverge-correctness}
+	$e\Uparrow/~T$が成り立つならば$K(e)\Uparrow/~T$が成り立つ
+\end{theorem}
 
-K正規化後の式を評価してみると，
-例えば$1+2$のような評価後に整数値を取るような式は，
-K正規化後の式$\LET~a = 1~\IN~\LET~b = 2~\IN~a + b$も共に3に評価される．
-この事から一見K正規化後の式を評価した結果はK正規化前の式を評価した結果と一致するように思われるが，これには反例が存在する．
+もっとも，\theoremname\ref{theorem:eval-correctness}の性質は直接帰納法によって証明するには弱いため，一般化が必要となる．
+その際一見\propositioname\label{proposition:wrong-lemma}が成り立つように思える．
+\begin{proposition}\label{proposition:wrong-lemma}
+	$e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow K(v)~/~t$が成り立つ
+\end{proposition}
+実際に二つ組のように複合的な値が存在しなければこの性質は一般に成り立つが，
+本研究の対象言語は二つ組を含むために反例が存在する．
+例えば$v=(\TRUE,\TRUE)$の場合，$K(v)=\LET~\_=~\TRUE~\IN~\LET~\_=~\TRUE~\IN~(1,0)$となり，$K(v)$は値にはならない．
+関係$e \Downarrow v~/~t$は$v$が常に値になるように定義されているため，
+$K(e)\Downarrow K(v)~/~t$は成り立たない．
 
-例えば，$\lambda x.\lambda y.~x+y+z$とそのK正規形$\lambda x.\lambda y.\lambda z.~\LET~a = x+y~\IN~a + z$を評価する事を考える．
-値評価では関数の中身は簡約されないため，前者は$\lambda x.\lambda y.~x+y+z$に評価される一方，
-後者は$\lambda x.\lambda y.\lambda z.~\LET~a = x+y~\IN~a + z$となって一致しない．
-しかし，両者の評価結果を比較すると，定理\ref{thm:knormal-correctness1}が成り立つ事が予想される．
-%\begin{theorem}\label{thm:knormal-correctness1}
-%	式eが値vに評価される場合，式eをK正規化した結果K(e)は値vをK正規化した結果K(v)に評価される
-%\end{theorem}
-これは評価の導出に関する帰納法で証明できる．
-
-また，定理\ref{thm:knormal-correctness2}も評価の導出に関する帰納法で証明できる．
-%\begin{theorem}\label{thm:knormal-correctness2}
-%	式eの評価が停止しない場合，式tをK正規化した結果K(e)の評価は停止しない
-%\end{theorem}
-その際，以下のような補題が必要となる．
-
-\begin{itemize}
-	\item $\forall c~d~e.~K(\uparrow^d_c e) = \uparrow^d_c K(e)$
-	\item $\forall e~k~\overline{e}.~K([k \mapsto \overline{e}]e)=[k \mapsto K(\overline{e})]K(e)$
-\end{itemize}
-
-\subsection{素朴な検証の問題点}
-コンパイラの正当性の証明を証明する際，
-自動証明を用いないような素朴な検証は対象言語に対するスケーラビリティが低くなりがちである．
-例えば，$\forall e~v~v'.e\Downarrow v \land e\Downarrow v' \Longrightarrow v = v'$のような命題を式$e$の構造に関する帰納法で証明する事を考える．
-自動証明を用いない場合，対象言語が型無し$\lambda$計算ならば3通りの場合分けが必要であるが，
-対象言語に真偽値の定数を追加すると16通りもの場合分けが必要となる．
-自動証明を用いない場合，全ての場合分けに対して個別に証明を書かなければならないため，
-素朴な検証ではすぐに破綻してしまう事が予想される．
-
-\subsection{Coqによる証明の方針}
-本研究では，Coqの証明自動化機能を用いる事で構文の違いの吸収を図った．
-%先ほどの例を自動証明を活用して証明すると\lstlistingname\ref{src:evalto-decidable}のようになる．
-%\begin{lstlisting}[caption=自動証明の活用例,label=src:evalto-decidable]
-%Lemma evalto_decidable : forall e v1 v2,
-%  evalto e v1 -> evalto e v2 -> v1 = v2.
-%Proof.
-%  intros e v1 v2 Hevalto1.
-%  generalize dependent v2.
-%  induction Hevalto1;
-%    intros v2_ Hevalto2;
-%    inversion Hevalto2;
-%    clear Hevalto2;
-%    repeat (subst; match goal with
-%    | [ H : Abs _ = Abs _ |- _ ] => inversion H; clear H
-%    | [ Hevalto : evalto ?t ?v,
-%        IH : forall v, evalto ?t v -> _ = v |- _ ] =>
-%        generalize (IH _ Hevalto); intros; clear Hevalto
-%    end); congruence.
-%Qed.
-%\end{lstlisting}
-
-Coqにおいて証明は，与えられた結論に対して仮定の導入や
-場合分け等の操作に相当するタクティックを適用する事で進行する\cite{09thecoq}．
-$\mathit{tactic}_1;\mathit{tactic}_2$と書くと二つのタクティックを合成する事もできる．
-この場合$\mathit{tactic}_1$が現在のサブゴールに適用され，その結果生じた全てのサブゴールに$\mathit{tactic}_2$が適用される．
-
-%また，\lstinline|match goal with|構文を使う事によって，
-サブゴールの形によって場合分けを行う事もできる．
-
-これらの様な機能によって，対象言語が変更された場合にも方針に従って証明を進める事ができ，
-自明な変更に対しては殆ど証明を変更せずに無く検証を行う事も可能である．
-
-\subsection{言語の拡張に対するスケーラビリティの評価}
-言語の拡張に対する証明のスケーラビリティを評価するため，
-型無し$\lambda$計算におけるK正規化の正当性を検証した後，
-対象言語に算術演算，if，letといったプリミティブを追加して証明の再利用性を評価する．
-
-対象言語の拡張前後で証明の行数を比較すると，
-型無し$\lambda$計算における検証では110行を要したのに対し，
-対象言語を拡張した後では141行に留まった．
-
-証明の内容について比較すると，
-シフトや代入についての補題のように，
-式の構造に関する帰納法で証明できるような単純な補題については変更する事無く再利用できた．
-K正規化の正当性のように複雑な証明については変更を強いられたが，
-サブゴールについての場合分けを追加する事で対処が可能であった．
+そこで，ソース言語の式を評価した結果得られる値とK正規形を評価した結果得られる値の評価結果の間に成り立つと期待される関係として，
+\figurename\ref{eqn:knormal-value-relation}の関係$v \rhd v'$を定義する．
+\begin{figure}
+	\[\begin{array}{rcl}
+		c & \rhd & c \\
+		x & \rhd & x \\
+	\end{array}\]
+	\[\begin{array}{l}
+		\FIX.~[2\mapsto e_2,~\cdots , n+1\mapsto e_{n+1}]e\\
+		\rhd~\FIX.~[2\mapsto K(e_2),~\cdots , n+1\mapsto K(e_{n+1})]K(e) \\
+	\end{array}\]
+	\begin{prooftree}
+		\AxiomC{$v_1 \rhd v_1'$}
+		\AxiomC{$v_2 \rhd v_2'$}
+		\BinaryInfC{$(v_1,~v_2) \rhd (v_1',~v_2')$}
+	\end{prooftree}
+	\caption{値同士の対応関係}
+	\label{eqn:knormal-value-relation}
+\end{figure}
+これを用いた\lemmaname\ref{lemma:eval-correctness}は一般に成り立ち，
+$[0\mapsto e_0,~\cdots , n-1\mapsto e_{n-1}]e$の導出についての帰納法で証明できる．
+\begin{lemma}\label{lemma:eval-correctness}
+	\[[0\mapsto e_0,\cdots , n-1\mapsto e_{n-1}]e\Downarrow v~/~t\]
+	が成り立つならば，
+	\[[0\mapsto K(e_0),\cdots , n-1\mapsto K(e_{n-1})]K(e)\Downarrow v'~/~t\]及び
+	$v\rhd v'$を成り立たせるような$v'$が存在する
+\end{lemma}
 
 \section{議論・関連研究}
+本研究と同時期に行われた入出力を含むような高階関数型言語の処理系に関する検証として，
+CakeML\cite{DBLP:conf/popl/KumarMNO14}とPilsner\cite{DBLP:conf/icfp/NeisHKMDV15}が挙げられる．
+形式的検証の手法に注目すると，CakeMLはソース言語の束縛を名前によって表現しており，中間言語からde Bruijnインデックスに切り替えている．
+ソース言語にはクロックとタイムアウトによって拡張された大ステップ操作的意味論を用いており，
+中間言語からは小ステップ操作的意味論を用いている．
+正当性の証明には本研究と同じように，評価結果同士の対応関係を定義する事でステートメントを一般化している．
+一方，Pilsnerは束縛を名前によって表現しているほか，
+対象言語の意味を定めるために小ステップ操作的意味論を，
+正当性の証明にはLogical Relationを用いている．
+それらの手法には以下のようなトレードオフが存在するため，
+CakeMLやPilsnerも形式的検証の際に影響を受けているものと考えられる．
+
+\subsection{束縛の表現}
 本研究では束縛の表現にde Bruijnインデックスを用いたが，
 名前による束縛の表現の欠点を改善した他の手法として，
 パラメトリック高階抽象構文(PHOAS)\cite{Chlipala:2008:PHA:1411204.1411226}や
@@ -617,17 +482,15 @@ K正規化の正当性のように複雑な証明については変更を強い�
 
 ホスト言語の機能を用いた束縛の表現方法として，高階抽象構文(HOAS)が知られている．
 例えば，HOASによって束縛を表現した場合，$\lambda x.~x$を表す抽象構文木は
-%\lstinline|Abs (fun x => x)|となる．
+$\texttt{Abs}~(\texttt{fun}~x => x)$となる．
 PHOASはHOASを発展させたものであり，
 Coqのような定理証明支援系に適用できなかった問題が修正されている．
-
 PHOASを束縛の表現に用いた場合，
-名前による束縛の表現で問題となった名前の付け替えをホスト言語に任せられる利点がある．
-加えて，代入もホスト言語の機能を用いて簡単に表せる．
-
+名前による束縛の表現で問題となった名前の付け替えをメタ言語に任せられる利点がある．
+加えて，代入もメタ言語の機能を用いて簡単に表現できる．
 一方，PHOASによって束縛を表現した言語の性質を証明しようとすると，
-ホスト言語の機能を用いているために必要以上に一般的な命題を証明しなければならない．
-また，PHOASの理論も複雑であるため，証明を書くのが困難となる．
+メタ言語の機能を用いているためにメタ言語が満たす性質が必要となり，必要以上に一般的な命題を証明しなければならない．
+また，証明手法が影響を受けるのみならず，メタ言語の制約によって意味論を修正しなければならない場合もある．
 
 局所名前無し表現は名前による束縛の表現とde Bruijnインデックスの折衷案であり，
 自由変数は名前によって表現し，束縛変数はde Bruijnインデックスによって表現する．
@@ -636,7 +499,6 @@ PHOASを束縛の表現に用いた場合，
 また，自由変数は名前によって表したため，
 シフトが不要になる，
 束縛の付け替えが伴う操作の実装がde Bruijnインデックスより自然となる等の利点も存在する．
-
 ただし，自由変数と束縛変数で構文を分けて扱う必要があり，
 それに伴って名前によって表現された変数に対する代入と
 インデックスによって表現された変数に対する代入に相当する操作もそれぞれ実装する必要がある．
@@ -647,29 +509,37 @@ PHOASを束縛の表現に用いた場合，
 これらの束縛の表現も比較検討したところ，de Bruijnインデックスが最も
 理論的な簡単さと証明の簡潔さのバランスに優れていると判断した．
 
-\section{結論}
-型なし$\lambda$計算に算術演算，if，letといったプリミティブを追加した，
-MinCamlのサブセットにあたる言語のK正規化の正当性をCoqで証明できた．
-その際de Buijnインデックス，余帰納的大ステップ意味論を採用した事により
-証明を簡潔にできた．
-加えて，Coqの証明自動化に関する機能を用いた事によって，
-対象言語の変更に対して証明がスケールするようにできた．
+\subsection{意味論}
+本研究では余帰納的大ステップ操作的意味論を選択したが，
+入出力を含むような言語の意味を定義する手法として
+小ステップ操作的意味論の拡張も知られている．
+双模倣を用いれば余帰納的大ステップ操作的意味論と同様に無限に入出力を行うプログラム同士
+の等価性を議論できる利点はあるが，
+入出力を含むような簡約と入出力を含まないような簡約を区別して扱わなくてはならず，
+煩雑になる欠点がある．
+この欠点は弱双模倣性についての議論の際に顕著となる．
 
-本研究では対象言語をMinCamlのサブセットに限定しているが，
-今後は組や複数引数の関数といった要素数が可変の構文，
-配列や外部関数呼び出しのような副作用を伴う言語機能を
-含むように対象言語を拡張し，
-MinCamlと同等なものにする必要がある．
+\subsection{証明法}
+プログラムの等価性を証明するためによく用いられる手法の一つにLogical Relation\cite{Pierce:2004:ATT:1076265}が挙げられる．
+これは型が付くような項一般に成り立つものの，いくつかの破壊子では成り立たないような性質を示す手法であり，
+型によって添え字付けされた関係によってステートメントを一般化する事で帰納法が回らなくなる問題を回避している．
+強正規化性や文脈等価性の証明にも用いられるように適用範囲の広い手法であるが，
+再帰関数や副作用を含むような言語では証明が煩雑になる欠点が存在するため，本研究では採用を見送った．
+
+\section{結論}
+入出力等の副作用を持つ外部関数の呼び出しや再帰関数，高階関数，組を持つ値呼びの関数型プログラミング言語に対するK正規化を
+定理証明支援系Coqを用いて形式的に検証できた．
+様々な手法を比較検討して余帰納的大ステップ操作的意味論とde Bruijnインデックスを採用した結果，
+証明手法の簡潔さと証明スクリプトの短さをある程度両立できた．
+
+本研究の対象言語では関数の引数を一つに限定したほか組の代わりに二つ組を採用するなど複数の要素を含む構文を除いているが，
+理由としては構文木に対する帰納法を定理証明支援系上で扱うのが困難になる事が挙げられる．
+今後はそのような構文も含むように対象言語を拡張した上で形式的検証を続けていきたい．
 
 \section*{謝辞}
 
-本論文を作成するにあたり，指導教員の住井教授にはお忙しい中貴重な時間を割いて頂き，丁寧かつ熱心なご指導を賜りました．
-ここに感謝の意を表します．
-
-また，要旨及び章立ての添削等，広範にわたってご指導頂いた松田准教授に深く感謝いたします．
-
-そして，多くの経験に裏打ちされた指摘を下さったKiselyov先生及び住井・松田研究室の先輩方，
-研究で悩んだ事があればすぐに相談に乗ってくれた同級生の皆様に感謝いたします．
+本稿を執筆するにあたり，東北大学の松田准教授には広範にわたってコメントを頂いた．
+多大な貢献を頂いた事を深く感謝する．
 
 %% 参考文献: bibtex
 \bibliographystyle{jssst}

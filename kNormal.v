@@ -654,28 +654,6 @@ Module KNormal.
       repeat (f_equal; rewrite Exp.shift_swap by omega; eauto).
   Qed.
 
-  Lemma knormal_subst : forall x es e,
-    Exp.subst x (map (fun e => toExp (knormal e)) es) (toExp (knormal e))
-    = toExp (knormal (Exp.subst x es e)).
-  Proof.
-    fix 3.
-    intros ? ? e.
-    destruct e; simpl in *;
-      repeat rewrite toExp_shift_commute;
-      repeat rewrite <- Exp.shift_subst_distr with (d := 1) by omega;
-      repeat rewrite knormal_subst;
-      eauto.
-    Exp.elim_shift_subst_var; eauto.
-    rewrite knormal_shift.
-    rewrite toExp_shift_commute.
-    f_equal.
-    rewrite <- map_nth with (f := knormal).
-    rewrite <- map_nth with (f := toExp).
-    rewrite map_length.
-    rewrite map_map.
-    reflexivity.
-  Qed.
-
   Theorem knormal_evalto : forall l e v,
     Exp.evalto l e v ->
     forall vs kvs e',
@@ -719,10 +697,8 @@ Module KNormal.
       end; simpl in *; subst);
       try match goal with
       | H : _ = nth ?n ?vs _ |- _ =>
-          assert (n < length vs) by
-          (destruct (lt_dec n (length vs));
-          [ assumption
-          | rewrite nth_overflow in H by omega; discriminate ])
+          destruct (lt_dec n (length vs));
+          [| rewrite nth_overflow in H by omega; discriminate ]
       end;
       try match goal with
       | |- exists _, Exp.evalto _ (nth ?n kvs ?d) _ /\ _ =>
@@ -736,20 +712,7 @@ Module KNormal.
       repeat (match goal with
       | _ => rewrite Hlength in *
       | H : _ = nth _ _ _ |- _ => rewrite <- H in *
-      | H : vknormal (Exp.Fix _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.App _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.Let _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.Int _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.Add _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.Sub _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.Mul _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.LE _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.Bool _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.If _ _ _) _ |- _ => inversion H
-      | H : vknormal (Exp.ExtVar _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.Pair _ _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.Fst _) _ |- _ => inversion H; clear H
-      | H : vknormal (Exp.Snd _) _ |- _ => inversion H
+      | H : vknormal (_ _) _ |- _ => inversion H; clear H
       end; subst);
       eauto 7.
     - assert (IHHevalto3' : exists kv,
@@ -818,10 +781,11 @@ Module KNormal.
       simpl in *;
       [ Exp.elim_shift_subst_var;
         [ rewrite Exp.shift_0 in *;
-          destruct (lt_dec (n - 0) (length vs));
+          rewrite <- minus_n_O in *;
+          destruct (lt_dec n (length vs));
           [ assert (vknormal
-              (nth (n - 0) vs (Exp.Var (n - 0 - length vs)))
-              (nth (n - 0) kvs (Exp.Var (n - 0 - length kvs)))) by
+              (nth n vs (Exp.Var (n - length vs)))
+              (nth n kvs (Exp.Var (n - length kvs)))) by
               (eapply Henv;
               rewrite <- map_nth with (f := Some);
               apply nth_indep;
@@ -854,10 +818,7 @@ Module KNormal.
       rewrite Exp.subst_meld in * by (simpl; omega).
       apply knormal_diverge with (vs := Exp.Fix (Exp.subst 2 vs0 e0) :: v2 :: vs0); simpl in *; eauto.
       intros i ? ? ? ?.
-      destruct i as [| []].
-      + congruence.
-      + congruence.
-      + eauto.
+      destruct i as [| []]; (congruence || eauto).
     - rewrite Exp.subst_meld in * by reflexivity.
       simpl in *.
       eapply knormal_diverge; eauto; simpl; eauto.

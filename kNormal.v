@@ -642,7 +642,7 @@ Module KNormal.
   Qed.
   Hint Resolve vknormal_value2.
 
-  Theorem knormal_evalto : forall l e v,
+  Lemma knormal_evalto : forall l e v,
     Exp.evalto l e v ->
     forall vs kvs e',
     e = Exp.subst 0 vs e' ->
@@ -752,7 +752,7 @@ Module KNormal.
       eauto.
   Qed.
 
-  Theorem knormal_diverge : forall l e vs kvs,
+  Lemma knormal_diverge : forall l e vs kvs,
     Exp.diverge l (Exp.subst 0 vs e) ->
     length vs = length kvs ->
     (forall i v kv,
@@ -807,5 +807,37 @@ Module KNormal.
         repeat match goal with
         | H : Some _ = Some _ |- _ => inversion H; clear H; subst
         end; eauto.
+  Qed.
+
+  Theorem knormal_correctness_evalto : forall l e v,
+    Exp.evalto l e v ->
+    exists v', Exp.evalto l (toExp (knormal e)) v' /\
+    (forall n, v = Exp.Int n -> v = v') /\
+    (forall b, v = Exp.Bool b -> v = v').
+  Proof.
+    intros ? e ? Hevalto.
+    eapply knormal_evalto with (e' := e) (kvs := []) (vs := []) in Hevalto;
+      simpl;
+      try rewrite Exp.subst_nil in *;
+      eauto.
+    - destruct Hevalto as [? [? Hvknormal]].
+      eexists.
+      split.
+      + eauto.
+      + split; intros; subst; inversion Hvknormal; eauto.
+    - intros [] ? ? ? ?; discriminate.
+  Qed.
+
+  Theorem knormal_correctness_diverge : forall l e,
+    Exp.diverge l e ->
+    Exp.diverge l (toExp (knormal e)).
+  Proof.
+    intros ? ? Hdiverge.
+    erewrite <- Exp.subst_nil in Hdiverge.
+    eapply knormal_diverge with (kvs := []) in Hdiverge;
+      simpl;
+      try rewrite Exp.subst_nil in *;
+      eauto.
+    intros [] ? ? ? ?; discriminate.
   Qed.
 End KNormal.

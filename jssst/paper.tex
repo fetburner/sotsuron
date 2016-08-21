@@ -102,95 +102,112 @@ K正規化とは全ての中間式にlet式を用いて陽に名前を与える�
 また，束縛の表現としては，他の手法と比較検討した上でde Bruijnインデックスを採用した．}
 
 \Eabstract{
-Although formal verification of compiler is actively studied,
-higher-order functional programming languages
-with side effects (e.g.\ input/output) are rarely verified.
-This is due to difficulty of formalizing semantics for programs performing infinite input/output.
-We have mechanically verified K-normalization for call-by-value higher-order functional programs
-with external function calls that could possibly cause side effects (e.g.\ input/output), 
-recursive functions and pair by using the Coq proof assistant.
-K-normalization is a program conversion that names all subexpressions using ''let``,
-and its semantics are non-trivial due to binding manipulation.
-In this research, we defined semantics as infinite sequence of
-external function calls using coinductive big-step operational semantics.
-Futhermore, we compared several techniques to represent bindings,
-and we used de Bruijn indices. }
+Although formal verification of compilers is extensively studied,
+compilers for higher-order functional programming languages
+with side effects such as input and output are rarely verified.
+This is due to the difficulty of formalizing the semantics of programs performing infinite input and output.
+We have mechanically verified the K-normalization of call-by-value higher-order functional programs
+with recursive functions, pairs, and external function calls that can possibly cause side effects,
+by the Coq proof assistant.
+K-normalization is a program transformation that gives explicit names to all subexpressions using let bindings.
+Its formalization is non-trivial because of the manipulation of bindings.
+We defined the meanings of programs as infinite sequences of
+external function calls, using coinductive big-step operational semantics.
+We adopted de Bruijn indices by comparison with several techniques to represent bindings.
+}
 %
 \maketitle \thispagestyle {empty}
 
 \section{序論}
-\subsection{既存研究とその問題点}
+\subsection{背景}
 
-%% 参考文献は \cite{ID} とします（ID は refs.bib 内で文献につけた識別子）
+%% 参考文献は \cite{ID} とします(ID は refs.bib 内で文献につけた識別子)
 %% BibTeX の使い方などは各自調べて下さい．
 
-コンパイラの誤りは生成されたコードにも影響を及ぼすため，
+コンパイラの誤りは生成されるコードに影響を及ぼすため，
 信頼性の高いソフトウェアを開発するためには信頼性の高いコンパイラが必要である．
-そのため，コンパイラの形式的検証が盛んに試みられてきた一方で，
-入出力等の副作用があるような高階関数型プログラミング言語のコンパイラはあまり形式的検証が行われていない．
-これは，関数を第一級オブジェクトとして扱えるような言語では複雑な束縛の操作が必要であるほか，
-無限に入出力を行うプログラムの意味論の形式化が自明でないといった問題があるためである．
+そのため，コンパイラの形式的検証が盛んに試みられてきた．
+しかしながら，入出力等の副作用があるような高階関数型プログラミング言語のコンパイラに対する形式的検証はあまり行われていない．
+これは，(自由変数を持つ)関数を第一級オブジェクトとして扱えるような言語は複雑な束縛の操作を伴うほか，
+無限に入出力を行うプログラムの意味論の形式化が自明でないといった問題のためである．
 
-例えば，コンパイラの形式的検証の中でも成功した研究として，
-LeroyらによるCompCert\cite{2006-Leroy-Blazy-Dargaye}が挙げられる．
+例えば，コンパイラの形式的検証の中でも良く知られた研究として，
+CompCert\cite{2006-Leroy-Blazy-Dargaye}が挙げられる．
 これはC言語のほとんどの機能をサポートするコンパイラをCoqによって検証する試みである．
 C言語には入出力の機能が含まれているため，CompCertでも入出力の機能はサポートされている．
-その一方，C言語では関数が第一級オブジェクトではない上
-CompCertでは局所変数を定義できる位置を制限しているため，
-CompCertにおける束縛の操作は限定的となっている．
+その一方，C言語では自由変数を持つ関数が許されていない上，
+CompCertでは関数定義の戦闘でしか変数を宣言できないため，束縛の操作は限定的となっている．
 
-本研究と類似した，純粋でない関数型プログラミング言語を対象言語としたコンパイラの検証は
+本研究と類似した，純粋でない関数型プログラミング言語を対象としたコンパイラの検証としては
 Lambda Tamer\cite{ImpurePOPL10}が挙げられる．
-その対象言語は高階関数，参照，二つ組といった，副作用を扱える関数型プログラミング言語に一般的な機能を有している一方，
-入出力の機能はサポートされていない．
+その対象言語は高階関数，参照，例外，二つ組といった機能を有している一方，
+入出力はサポートされていない．
 
-入出力を含むような関数型プログラミング言語の処理系に関する検証としては，
-本研究と同時期に行われたCakeML\cite{CakeML:ICFP16}とPilsner\cite{DBLP:conf/icfp/NeisHKMDV15}が挙げられる．
-形式的検証の手法に注目すると，CakeMLはソース言語の束縛を名前によって表現しており，中間言語からde Bruijnインデックスに切り替えている．
+\subsection{本研究の貢献}
+本研究では，無限に入出力を行うことができる高階関数型プログラミング言語のコンパイラの一フェーズであるK正規化の検証を行う．
+K正規化とは，全ての中間式にlet式を用いて陽に名前を与えるプログラム変換である．
+
+%本研究でK正規化を検証するにあたって，先に挙げたような入出力や高階関数のみならず，
+%再帰関数や二つ組も扱えるような値呼びの関数型プログラミング言語を対象言語とした．
+%これは，MLのような現実的に用いられている値呼びの純粋でない関数型プログラミング言語の処理系を検証する上での問題点を分析するためである．
+%
+関数型プログラミング言語の形式化では，束縛の表現が重要な問題の一つになる．
+本研究では取り扱いの容易さからde Bruijnインデックスを採用した(\ref{section:bindings}節)．
+%コンパイラの検証のみならず，一般に変数束縛の機能を持つプログラミング言語を取り扱う上で問題となるのが束縛の表現である．
+%手法によっては採用する意味論や証明手法が制限される，コンパイラを形式的に検証する際に証明スクリプトの行数が増加するといった事も予想されるが，
+%今回は比較検討の結果de Bruijnインデックスを採用した．
+%これにより，証明手法の簡潔さと証明スクリプトの短さをある程度両立できた．
+
+%コンパイラの正当性は入力されたプログラムと出力されるプログラムが等価である事に相当するため，
+%コンパイラを形式的に検証するためには対象言語の意味を定めなくてはならない．
+%意味論も束縛の表現や証明手法に影響を及ぼしているが，
+%本研究では対象言語の意味を定めるために余帰納的大ステップ操作的意味論を採用した．
+%これも証明手法の簡潔さや証明スクリプトの短さに寄与している．
+
+対象言語の意味論は余帰納的大ステップ意味論により定義した(\ref{section:semantics}節)．
+これは通常の帰納的大ステップ意味論では無限ループするプログラムの意味を定義できず(行きづまり状態すなわちエラーとなり評価できないプログラムと区別がつかない)，
+また，小ステップ操作的意味論では評価文脈や内部遷移の扱いが煩雑になるためである．
+
+無限の入出力を含むような関数型プログラミング言語の処理系の検証としては，
+本研究と独立に行われたCakeML\cite{CakeML:ICFP16}とPilsner\cite{DBLP:conf/icfp/NeisHKMDV15}も挙げられる．
+CakeMLはソース言語の束縛を名前によって表現しており，中間言語からde Bruijnインデックスに切り替えている．
 ソース言語にはクロックとタイムアウトによって拡張された大ステップ操作的意味論を用いており，
 中間言語からは小ステップ操作的意味論を用いている．
 正当性の証明には本研究と同じように，評価結果同士の対応関係を定義する事でステートメントを一般化している．
 一方，Pilsnerは束縛を名前によって表現しているほか，
 対象言語の意味を定めるために小ステップ操作的意味論を，
-正当性の証明にはLogical Relationを用いている．
-それらの手法には後に解説するようなトレードオフが存在するため，
-CakeMLやPilsnerも形式的検証の際に影響を受けているものと考えられる．
+正当性の証明には論理関係(Logical Relation)を用いている．
+これらの手法は後に述べる理由により，
+本研究の手法より証明が煩雑になると思われる．
 
-\subsection{本研究の貢献}
-本研究でK正規化を検証するにあたって，先に挙げたような入出力や高階関数のみならず，
-再帰関数や二つ組も扱えるような値呼びの関数型プログラミング言語を対象言語とした．
-これは，MLのような現実的に用いられている値呼びの純粋でない関数型プログラミング言語の処理系を検証する上での問題点を分析するためである．
+本研究のCoqのソースコードは\url{https://github.com/fetburner/sotsuron/blob/master/kNormal.v}で公開している．
 
-コンパイラの検証のみならず，一般に変数束縛の機能を持つプログラミング言語を取り扱う上で問題となるのが束縛の表現である．
-手法によっては採用する意味論や証明手法が制限される，コンパイラを形式的に検証する際に証明スクリプトの行数が増加するといった事も予想されるが，
-今回は比較検討の結果de Bruijnインデックスを採用した．
-これにより，証明手法の簡潔さと証明スクリプトの短さをある程度両立できた．
+\subsection{本論文の構成}
+次の\ref{section:target}節では本研究の対象言語を，\ref{section:knormal}節ではK正規化を解説する．
+\ref{section:bindings}節では束縛を表現する手法を紹介し，de Bruijnインデックスを採用した理由を述べる．
+\ref{section:knormal-implement}節ではde Bruijnインデックスを採用した際，どのようにK正規化が実装されるか述べる．
+\ref{section:semantics}節では余帰納的大ステップ意味論と対象言語の意味論について解説する．
+\ref{section:verification}節ではどのようにして形式的検証したか解説し，
+最後に\ref{section:conclusion}節では結論を述べる．
 
-コンパイラの正当性は入力されたプログラムと出力されるプログラムが等価である事に相当するため，
-コンパイラを形式的に検証するためには対象言語の意味を定めなくてはならない．
-意味論も束縛の表現や証明手法に影響を及ぼしているが，
-本研究では対象言語の意味を定めるために余帰納的大ステップ操作的意味論を採用した．
-これも証明手法の簡潔さや証明スクリプトの短さに寄与している．
+\section{対象言語}\label{section:target}
+本研究における対象言語の構文は\figurename\ref{eqn:mincaml-ast}の通りである．
+プリミティブとして整数，真偽値，算術演算，$\IF$や$\LET$，再帰関数や二つ組を持つ．
+本研究の手法は論理関係と異なり，再帰関数の扱いが容易であることを示すため，プリミティブとしている．
+$\FIX~f~x.~e$の$e$において$f$が現れない場合には関数抽象$\lambda x.~e$に等しい．
+$\LET~x=e_1~\IN~e_2$は$(\lambda x.~e_2)~e_1$で表せるが，K正規形を表すためプリミティブとしている．
+算術演算としては加算，減算，乗算と比較演算が実装されている(除算などを扱うためには対象言語を例外処理で拡張する必要があると思われる)．
+本研究の対象言語では関数の引数の数や，同時に定義される再帰関数の数，及び組の要素の数を固定している．
+これは構文木の帰納的定義において任意長の再帰的出現の扱いがCoqでは困難だったためである．
 
-なお，本研究で実装したCoqによる証明のソースコードは全文が\url{https://github.com/fetburner/sotsuron/blob/master/kNormal.v}で公開されている．
+入出力専用の構文は存在しないが，自由変数に対する関数呼び出しは外部関数の呼び出しとみなし，外部関数が副作用を持つことを許す．
+例えば，%$\texttt{print\_int}$のような式は行き詰まり状態とならず値$\texttt{print\_int}$に評価され，
+式$\texttt{print\_int}~42$を評価すると，自由変数である外部関数''$\texttt{print\_int}$``が引数$42$に適用され，その戻り値に評価される．
+%外部関数が入出力を行うことを許しているため，対象言語は入出力を扱える特徴がある．
+ただし，簡単化のために外部関数は整数を受け取って整数を返すものに限定する．
+以上のような意味論は\ref{section:semantics}節で定義する．
 
-\section{対象言語}
-本研究におけるK正規化のソース言語の構文は\figurename\ref{eqn:mincaml-ast}のように表される．
-前に述べた入出力，再帰関数や二つ組だけでなく，整数，真偽値，算術演算，$\IF$や$\LET$といったプリミティブも持ち，関数は第一級である．
-型は導入していないため関数抽象のみでも再帰関数を実現できるが，
-実際に用いられている言語により近づけるために専用の構文を用意した．
-$\LET$も同様に関数抽象と関数適用で実現できるが，こちらはK正規形が対象言語のサブセットになるよう意図して導入している．
-算術演算は加算，減算，乗算と比較演算が実装されているが，これ以外のプリミティブを追加する事も容易である．
-本研究の対象言語では関数の引数を一つに限定したほか相互再帰を認めていない，組の代わりに二つ組を採用するなど複数の要素を含む構文を除いているが，
-理由としては構文木に対する帰納法を定理証明支援系上で扱うのが困難になる事が挙げられる．
-
-入出力専用の構文は存在しないが，自由変数に対する関数呼び出しは外部関数の呼び出しとみなされる．
-例えば，$\texttt{print\_int}$のような式は行き詰まり状態とならず値$\texttt{print\_int}$に評価され，
-$\texttt{print\_int}~42$のような式を評価すると引数を$42$として''$\texttt{print\_int}$``という名前を持つ外部関数が呼び出され，その戻り値に評価される．
-外部関数が入出力を行う事を許しているため，対象言語は入出力を扱える特徴がある．
-ただし，簡単化のために外部関数は整数を受け取って整数を返すものに限定している．
-
-\begin{figure}[htbp]
+\begin{figure}[tp]
 	\[ \begin{array}{lcll}
 		e & ::= & & \mbox{式} \\
 				& & c	& \mbox{定数} \\
@@ -212,16 +229,16 @@ $\texttt{print\_int}~42$のような式を評価すると引数を$42$として'
 	\label{eqn:mincaml-ast}
 \end{figure}
 
-\section{K正規化}
+\section{K正規化}\label{section:knormal}
 本研究ではコンパイラが行う処理のうち，
-束縛の付け替えが伴う非自明なプログラム変換であるK正規化に注目する．
-K正規化とは，与えられたプログラムを中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作を指し，
-直観的には全ての部分式を変数に束縛して名前を付けた形式に相当する．
-例えば，式$e$のK正規形を$K(e)$書くことにすると，
+束縛の付け替えを伴う非自明なプログラム変換であるK正規化に注目する．
+K正規化とは，与えられたプログラムを中間表現の一つであるK正規形\cite{Birkedal:1996:RIV:237721.237771}に変換する操作である．
+K正規形とは直観的には全ての部分式を変数に束縛して名前を付けた形式である．
+式$e$のK正規形を$K(e)$書くことにすると，例えば
 $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表される．
 \figurename\ref{eqn:mincaml-knormal}にK正規形の抽象構文を示す．
 
-\begin{figure}[htbp]
+\begin{figure}[tp]
 	\[ \begin{array}{ll}
 			k & ::= \\
 				& c \\
@@ -238,77 +255,98 @@ $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表
 	\label{eqn:mincaml-knormal}
 \end{figure}
 
-\section{束縛の表現}
-紙の上で定式化を行う場合に良く用いられる名前による表現は，$\alpha$等価性の取り扱いや捕獲の回避が面倒である欠点が存在する．
+\section{束縛の表現}\label{section:bindings}
+紙の上で定式化を行う場合に良く用いられる名前による表現は，$\alpha$等価性の取り扱いや変数の捕獲(capture)の回避が面倒であるという欠点が存在する．
 それらの欠点を回避した束縛の表現として，de Bruijnインデックス\cite{Pierce:TypeSystems}，局所名前無し表現\cite{chargueraud-11-ln}やパラメトリック高階抽象構文(PHOAS)\cite{Chlipala:2008:PHA:1411204.1411226}といった手法が挙げられる．
-
-\subsection{パラメトリック高階抽象構文}
-ホスト言語の機能を用いた束縛の表現方法として，高階抽象構文(HOAS)が知られている．
-例えば，HOASによって束縛を表現した場合，$\lambda x.~x$を表す抽象構文木は
-$\texttt{Abs}~(\texttt{fun}~x => x)$となる．
-PHOASはHOASを発展させたものであり，
-Coqのような定理証明支援系に適用できなかった問題が修正されている．
-PHOASを束縛の表現に用いた場合，
-名前による束縛の表現で問題となった名前の付け替えをメタ言語に任せられる利点がある．
-加えて，代入もメタ言語の機能を用いて簡単に表現できる．
-一方，PHOASによって束縛を表現した言語の性質を証明しようとすると，
-メタ言語の機能を用いているためにメタ言語が満たす性質が必要となり，必要以上に一般的な命題を証明しなければならない．
-また，証明手法が影響を受けるのみならず，メタ言語の制約によって意味論を修正しなければならない場合もある．
+本節ではこれらの手法を比較検討し，本研究でde Bruijnインデックスを採用する理由を述べる．
 
 \subsection{de Bruijnインデックス}
-de Bruijnインデックスは変数が何番目の束縛に対応するかで束縛を表現するものである．
-例えば，名前によって束縛を表現した式$\lambda x. \lambda y. \lambda z.~x~z~(y~z)$をde Bruijnインデックスで表現すると$\lambda. \lambda. \lambda.~2~0~(1~0)$となる．
-束縛に関する操作の際にシフトと呼ばれる操作が必要になる一方，PHOASに比べて証明手法や意味論の自由度が増える利点がある．
-本研究では理論的な簡単さと証明の簡潔さに優れていると判断して束縛の表現にde Bruijnインデックスを採用したが，
-自由変数に対しての関数呼び出しを特別扱いしたため束縛変数をインデックスで表現し，自由変数は従来通り名前で表現している．
-例えば$(\FIX~f~x.~\texttt{print\_int}~x)~42$のような式は実際のCoq上では
-\[\texttt{App}~(\texttt{Fix}~(\texttt{App}~(\texttt{ExtVar}~\texttt{print\_int})~(\texttt{Var}~1)))~(\texttt{Int}~42)\]
-として扱われる．
+De Bruijnインデックスは，内側から数えて何番目の束縛に対応するかにより変数の出現を表現する手法である．
+例えば，名前によって束縛を表現した式$\lambda x. x (\lambda y.~x~y)$をde Bruijnインデックスで表現すると$\lambda.~0~(\lambda.~1~0)$となる．
+De Bruijnインデックスでは代入の際にシフトと呼ばれる操作が必要になる．
+例えば，$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.~(\lambda y.~z)$に簡約する場合，de Bruijnインデックスでは前者は$\lambda.~(\lambda.\lambda.~1)~0$，後者は$\lambda~(\lambda.~1)$となり，
+変数$z$の出現のインデックスが$0$から$1$に増えている．
+このようにインデックスを増やす操作をシフトと呼び，
+一般に式$e$に現れる全ての自由変数のインデックスを$d$ずつ増やした式を$\uparrow^d e$と表す．
+
+本研究ではde Bruijnインデックスを採用しつつ，自由変数は名前で表現している．
+例えば式$(\FIX~f~x.~\texttt{print\_int}~x)~42$はCoq上では
+\[\texttt{App}~(\texttt{Fix}~(\texttt{App}~(\texttt{ExtVar}~v)~(\texttt{Var}~1)))~(\texttt{Int}~42)\]
+(ただし$v$は$\texttt{print\_int}$を表す自然数)と表される．
+De Bruijnインデックスのシフト操作に伴う算術演算やそれに関する証明は必要となるが，
+Presburger算術などによりほぼ自動化できる．
 
 \subsection{局所名前無し表現}
-局所名前無し表現は名前による束縛の表現とde Bruijnインデックスの折衷案であり，
+局所名前無し表現\cite{chargueraud-11-ln}は名前による束縛の表現とde Bruijnインデックスの折衷案であり，
 自由変数は名前によって表現し，束縛変数はde Bruijnインデックスによって表現する．
-自由変数を名前によって表したため，
-de Bruijnインデックスと比べてシフトが不要となり，束縛の付け替えが伴う操作の実装がde Bruijnインデックスより自然となる等の利点も存在する．
-ただし，自由変数と束縛変数で構文を分けて扱う必要があり，
-それに伴って名前によって表現された変数に対する代入と
-インデックスによって表現された変数に対する代入に相当する操作もそれぞれ実装する必要がある．
-それに伴ってそれぞれに対して補題を証明しなければならないため，非常に煩雑である．
+ただし上述の我々の手法とは異なり，
+例えば先の$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.~(\lambda y.~z)$に簡約する場合，
+まず前者の$\lambda z$に対しopenと呼ばれる操作を行い，freshな$z$に対し本体を$(\lambda .\lambda.~1)~z$と表してから，
+$\lambda.~z$に簡約した後，closeと呼ばれる操作を行い，$\lambda.~1$を得る．
+このように局所名前無し表現ではシフト操作が不要になる一方，
+$(\lambda .\lambda.~1)~z$のようにopenされた本体が元の式の部分式にならないため，
+K正規化のような帰納的定義の停止性や，
+K正規化の結果に対してlocally closedという性質を証明する必要があり煩雑である．
+また，openやcloseについての補題も必要となる．
 
-局所名前無し表現は常に自由変数は名前によって，束縛変数はインデックスによって表現される不変条件を満たす事を要請している．
-従って，K正規化等のプログラム変換によって束縛の中を処理する場合には，束縛変数に対して新しい名前の自由変数を代入して不変条件を保たなくてはならない．
-定理証明支援系で検証をする際には不変条件が保たれている事を証明する必要があり，
-なおかつ代入が行われた後の式に対して再帰的にプログラム変換を行う事になるため
-プログラム変換の停止性も別途証明しなければならない．
-これらの欠点から今回は局所名前無し表現の採用を見送った．
+%では前者は$\lambda.~(\lambda.\lambda.~1)~0$，後者は$\lambda~(\lambda.~1)$となり，
+%自由変数を名前によって表したため，
+%de Bruijnインデックスと比べてシフトが不要となり，束縛の付け替えが伴う操作の実装がde Bruijnインデックスより自然となる等の利点も存在する．
+%ただし，自由変数と束縛変数で構文を分けて扱う必要があり，
+%それに伴って名前によって表現された変数に対する代入と
+%インデックスによって表現された変数に対する代入に相当する操作もそれぞれ実装する必要がある．
+%それに伴ってそれぞれに対して補題を証明しなければならないため，非常に煩雑である．
+%
+%局所名前無し表現は常に自由変数は名前によって，束縛変数はインデックスによって表現される不変条件を満たす事を要請している．
+%従って，K正規化等のプログラム変換によって束縛の中を処理する場合には，束縛変数に対して新しい名前の自由変数を代入して不変条件を保たなくてはならない．
+%定理証明支援系で検証をする際には不変条件が保たれている事を証明する必要があり，
+%なおかつ代入が行われた後の式に対して再帰的にプログラム変換を行う事になるため
+%プログラム変換の停止性も別途証明しなければならない．
+%これらの欠点から今回は局所名前無し表現の採用を見送った．
+%
+%本研究でも同様に自由変数を名前として扱ったが，
+%シフトを用いる事で束縛の中をプログラム変換する際に局所名前無し表現の不変条件が成り立たなくなる事も許している点が局所名前無し表現とは異なる．
 
-本研究でも同様に自由変数を名前として扱ったが，
-シフトを用いる事で束縛の中をプログラム変換する際に局所名前無し表現の不変条件が成り立たなくなる事も許している点が局所名前無し表現とは異なる．
+\subsection{パラメトリック高階抽象構文}
+高階抽象構文(HOAS)とは，対象言語の束縛をホスト言語の束縛で表す手法である．
+例えば，$\lambda x.~x$を表す抽象構文木は$\texttt{Abs}~(\texttt{fun}~x \Rightarrow x)$となる．
+PHOAS\cite{Chlipala:2008:PHA:1411204.1411226}はHOASの改良であり，
+式の負の位置の再帰的出現を型パラメーターで置き換えることにより，
+Coqのような定理証明支援系において帰納的定義を可能としている．
+PHOASは名前の付け替えや代入をメタ言語に任せることができる一方，
+束縛に関する証明においてメタ言語の性質に関する証明が必要となり，しばしば本質的な困難がある．
 
-\section{K正規化の実装}
-例えば，名前による表現では$(\FIX~f~x.~x)~(\FIX~f~x.~y)$に相当するde Bruijnインデックスで束縛を表現した式をK正規化する事を考える．
-名前による表現では，新しい変数名を選べば$\LET~a = \FIX~f~x.~x~\IN~\LET~b = \FIX~f~x.~y~\IN~a~b$
+%一方，PHOASによって束縛を表現した言語の性質を証明しようとすると，
+%メタ言語の機能を用いているためにメタ言語が満たす性質が必要となり，必要以上に一般的な命題を証明しなければならない．
+%また，証明手法が影響を受けるのみならず，メタ言語の制約によって意味論を修正しなければならない場合もある．
+%束縛に関する操作の際にシフトと呼ばれる操作が必要になる一方，PHOASに比べて証明手法や意味論の自由度が増える利点がある．
+%
+\section{K正規化の実装}\label{section:knormal-implement}
+% ifの例で書き換える
+本節ではde Bruijnインデックスで束縛を表現した場合，どのようにK正規化が実装されるかを述べる．
+例えば，名前による表現では$\IF~\TRUE~\THEN~x~\ELSE~y$に相当するde Bruijnインデックスで束縛を表現した式をK正規化する事を考える．
+名前による表現では，新しい変数名を選べば$\LET~a = \TRUE~\IN~\IF~a~\THEN~x~\ELSE~y$
 のように単純に$\LET$を挿入するだけでK正規形が得られる．
 一方，de Bruijnインデックスによる表現では$\LET$が挿入されると束縛の対応関係がずれてしまうため，
 シフトによってインデックスをずらす必要がある．
-式eをdだけシフトする事を$\uparrow^d e$と書くと，de Bruijnインデックスで束縛を表現した式$(\FIX.~1)~(\FIX.~2)$
+De Bruijnインデックスで束縛を表現した式$\IF~\TRUE~\THEN~0~\ELSE~1$
 のK正規形は
 \[ 
 	\begin{array}{l}
-		\LET~\_ = \FIX.~1~\IN~\LET~\_ = \uparrow^1(\FIX.~2)~\IN~1~0 \\
-		\approx \LET~\_ = \FIX.~1~\IN~\LET~\_ = \FIX.~3~\IN~1~0 \\
+		\LET~\TRUE~\IN~\IF~\TRUE~\THEN~\uparrow^1 0~\ELSE~\uparrow^1 1 \\
+		\approx \LET~\TRUE~\IN~\IF~\TRUE~\THEN~1~\ELSE~2 \\
 	\end{array}
 \]
 となる．
 本研究におけるK正規化の実装の一部を\figurename\ref{eqn:knormalize}に示す．
-\begin{figure*}[htbp]
+\begin{figure*}[tp]
 	\[\begin{array}{rcl}
 		K(c) & \equiv & c \\
-		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) & \equiv & \LET~\_ = K(e_1)~\IN~\IF~0~\THEN\uparrow^1 K(e_2)~\ELSE\uparrow^1 K(e_3) \\
-		K(\LET~\_ = e_1~\IN~e_2) & \equiv & \LET~\_=K(e_1)~\IN~K(e_2) \\ 
+		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) & \equiv & \LET~ K(e_1)~\IN~\IF~0~\THEN\uparrow^1 K(e_2)~\ELSE\uparrow^1 K(e_3) \\
+		K(\LET~ e_1~\IN~e_2) & \equiv & \LET~K(e_1)~\IN~K(e_2) \\ 
 		K(x) & \equiv & x \\
 		K(\FIX.~e) & \equiv & \FIX.~K(e) \\
-		K(e_1~e_2) & \equiv & \LET~\_ = K(e_1)~\IN~\LET~\_ = K(e_2)~\IN~1~0 \\
+		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ K(e_2)~\IN~1~0 \\
 	\end{array}\]
 	\caption{K正規化の実装の一部}
 	\label{eqn:knormalize}
@@ -320,16 +358,16 @@ de Bruijnインデックスと比べてシフトが不要となり，束縛の�
 本研究の対象言語の意味論を定義するにあたって，
 大ステップ操作的意味論を採用する事にする．
 大ステップ操作的意味論の評価規則は構文とほぼ一対一に対応しており，
-比較的単純なプログラム変換の検証には小ステップ操作的意味論より適している．
-本研究では入出力を扱うために，入出力の列によって一般的な大ステップ操作的意味論を拡張し，
-評価関係を式$e$，評価結果$v$，評価の際に行った入出力の列$t$の三項関係$e \Downarrow v~/~t$とした．
+プログラム変換の検証には小ステップ操作的意味論より適している．
+本研究では入出力を扱うために，一般的な大ステップ操作的意味論を入出力の列によって拡張し，
+評価関係を式$e$，評価結果$v$，評価の際に行った入出力の(有限)列$t$との三項関係$e \Downarrow v~/~t$とした．
 ここでの入出力はどのような外部関数呼び出しが行われたかであり，
 引数を$n$として外部関数$x$を呼び出した場合に戻り値として$m$が得られた事を$x(n)=m$と書く事にする．
 対象言語の評価規則の一部を\figurename\ref{eqn:target-eval}に示す．
-大ステップ操作的意味論を採用しているため代入の代わりに環境を用いて対象言語の意味を定義する事もできるが．
-環境を用いた場合は形式的検証の際にクロージャ同士の等価性の議論が煩雑になるため本研究では代入を用いた意味論を採用した．
+代入の代わりに環境を用いて対象言語の意味を定義する事もできるが．
+環境を用いた場合は形式的検証の際にクロージャ同士の等価性の議論が煩雑になるため，本研究では代入を用いた意味論を採用した．
 
-\begin{figure}[htbp]
+\begin{figure}[tp]
 	\begin{prooftree}
 		\AxiomC{}
 		\RightLabel{\textsc{E-Fix}}
@@ -338,10 +376,9 @@ de Bruijnインデックスと比べてシフトが不要となり，束縛の�
 	\medskip
 	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow \FIX .~e~/~t_1$}
+		\AxiomC{$e_2 \Downarrow v_2~/~t_2$}
 		\noLine
-		\UnaryInfC{$e_2 \Downarrow v_2~/~t_2$}
-		\noLine
-		\UnaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
+		\BinaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
 		\RightLabel{\textsc{E-AppFix}}
 		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1~t_2~t_3$}
 	\end{prooftree}
@@ -356,12 +393,13 @@ de Bruijnインデックスと比べてシフトが不要となり，束縛の�
 \end{figure}
 
 \subsection{余帰納的大ステップ操作的意味論}
-大ステップ操作的意味論においても停止しない評価と行き詰まり状態を区別する試みとして，
-LeroyとGrallによって余帰納的大ステップ操作的意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
+大ステップ操作的意味論において停止しない評価と行き詰まり状態を区別するため，
+余帰納的大ステップ操作的意味論が提案されている\cite{DBLP:journals/iandc/LeroyG09}．
 これは，評価が停止しない事を表す述語を余帰納的に定義する事で，
 従来の評価規則を補うものである．
-余帰納的大ステップ操作的意味論を用いた本研究における対象言語の評価規則の一部を\figurename\ref{eqn:target-diverge}に示す．
-\begin{figure}[htbp]
+余帰納的大ステップ操作的意味論を用いた本研究における対象言語の評価規則の一部を\figurename\ref{eqn:target-diverge}に示す
+(Coqでは単に$\texttt{CoInductive}$を用いている)．
+\begin{figure}[tp]
 	\begin{prooftree}
 		\AxiomC{$e_1 \Uparrow /~t_1$}
 		\RightLabel{\textsc{D-AppL}}
@@ -378,10 +416,9 @@ LeroyとGrallによって余帰納的大ステップ操作的意味論が提案�
 	\medskip
 	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow \FIX.~e~/~t_1$}
+		\AxiomC{$e_2 \Downarrow v_2~/~t_2$}
 		\noLine
-		\UnaryInfC{$e_2 \Downarrow v_2~/~t_2$}
-		\noLine
-		\UnaryInfC{$[0 \mapsto \FIX~e,~1\mapsto v_2]e \Uparrow / ~t_3$}
+		\BinaryInfC{$[0 \mapsto \FIX~e,~1\mapsto v_2]e \Uparrow / ~t_3$}
 		\RightLabel{\textsc{D-App}}
 		\doubleLine
 		\UnaryInfC{$e_1~e_2 \Uparrow/~t_1~t_2~t_3$}
@@ -389,42 +426,40 @@ LeroyとGrallによって余帰納的大ステップ操作的意味論が提案�
 	\caption{余帰納的大ステップ意味論を用いた評価規則抜粋}
 	\label{eqn:target-diverge}
 \end{figure}
-実際のCoq上では余帰納的定義を行うための機能として$\texttt{CoInductive}$が用意されているため，これを用いている．
 
-ここで，本研究では入出力を扱うために評価関係を式$e$と評価の際に行なわれた入出力の列$t$の二項関係$e \Uparrow /~t$としている．
+本研究では入出力を扱うため，評価関係を式$e$と，評価の際に行なわれた入出力の列$t$(無限列でもよい)との二項関係$e \Uparrow /~t$としている．
 これによって評価が停止しないプログラム同士も入出力の内容で区別できる．
 例えば$(\FIX.~0~1)~(\texttt{print\_int}~\texttt{42})$と$(\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0}$は共に停止しないプログラムであるが，
 前者は一回のみ$\texttt{print\_int}$の呼び出しが行われるのに対して後者は無限回の呼び出しが行われる点で異なる．
 本研究の評価規則では前者は$(\FIX.~0~1)~(\texttt{print\_int}~\texttt{42})\Uparrow/~\texttt{print\_int}(42)=0$が成り立ち，
-後者は$(\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0}\Uparrow /~\texttt{print\_int}(42)=0, \cdots$が成り立つ．
+後者は$(\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0}\Uparrow /~\texttt{print\_int}(42)=0, \texttt{print\_int}(42)=0, \cdots$が成り立つ．
 行われた入出力の列が異なる事から，両者を区別できる．
 
 本研究では余帰納的大ステップ操作的意味論を選択したが，
 入出力を含むような言語の意味を定義する手法として
-小ステップ操作的意味論の拡張も知られている．
+ラベル付きの小ステップ操作的意味論も知られている．
 双模倣を用いれば余帰納的大ステップ操作的意味論と同様に無限に入出力を行うプログラム同士
 の等価性を議論できる利点はあるが，
-入出力を含むような簡約と入出力を含まないような簡約を区別して扱わなくてはならず，
-煩雑になる欠点がある．
-この欠点は弱双模倣性についての議論の際に顕著となる．
+入出力を含むような簡約と入出力を含まないような簡約(内部遷移)を区別して扱わなくてはならず，
+弱双模倣性の定義やup-to reductionなどの手法が必要になる．
 
-\section{Coqによる形式的検証}
+\section{Coqによる形式的検証}\label{section:verification}
 K正規化に期待される性質について考える．
 K正規形はソース言語のサブセットになっているが，
-値呼びの評価戦略では関数抽象の中は簡約されないため
-K正規後のプログラムはK正規化前のプログラムと厳密には等価ではない．
-従って，プログラムの振る舞いに注目して性質が保存されているかどうかを検討する．
-一般的なコンパイラでは与えられたプログラムは最終的に命令の列に変換される事を考慮すると
+値呼びの評価戦略では関数抽象の中は簡約されないため，
+K正規後のプログラムはK正規化前のプログラムと値呼びの簡約では等価ではない．
+従って，プログラムの振る舞いに注目した等価性を考える．
+プログラム全体の実行結果は整数または真偽値になるとすると，
 \theoremname\ref{theorem:eval-correctness}と\theoremname\ref{theorem:diverge-correctness}が期待される．
 \begin{theorem}\label{theorem:eval-correctness}
 	$e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow v'~/~t$が成り立ち．
-	$v$が数値または真偽値ならば$v=v'$となる
+	$v$が整数または真偽値ならば$v=v'$となる
 \end{theorem}
 \begin{theorem}\label{theorem:diverge-correctness}
-	$e\Uparrow/~T$が成り立つならば$K(e)\Uparrow/~T$が成り立つ
+	$e\Uparrow/~T$が成り立つならば$K(e)\Uparrow/~t$が成り立つ
 \end{theorem}
 
-もっとも，\theoremname\ref{theorem:eval-correctness}の性質は直接帰納法によって証明するには弱いため，一般化が必要となる．
+しかし，\theoremname\ref{theorem:eval-correctness}を帰納法によって証明しようとすると帰納法の仮定が弱すぎるため，一般化が必要となる．
 その際一見\wrongpropositioname
 %\label{wrongproposition:wrong-lemma} %なぜか働いてくれない
 1 %むりやり手書き
@@ -432,14 +467,13 @@ K正規後のプログラムはK正規化前のプログラムと厳密には等
 \begin{wrongproposition}\label{wrongproposition:wrong-lemma}
 	$e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow K(v)~/~t$が成り立つ
 \end{wrongproposition}
-実際に二つ組のように複合的な値が存在しなければこの性質は一般に成り立つが，
+実際に二つ組のように複合的な値が存在しなければこの性質は成り立つが，
 本研究の対象言語は二つ組を含むために反例が存在する．
-$v=(v_1,v_2)$の場合，$K(v)=\LET~\_=~v_1~\IN~\LET~\_=~\uparrow^1 v_2~\IN~(1,0)$となり，$K(v)$は値にはならない．
-関係$e \Downarrow v~/~t$は$v$が常に値になるように定義されているため，
+例えば$v=(v_1,v_2)$の場合，$K(v)=\LET~v_1~\IN~\LET~\uparrow^1 v_2~\IN~(1,0)$となり，$K(v)$は値にはならず，
 $K(e)\Downarrow K(v)~/~t$は成り立たない．
 
-そこで，ソース言語の式を評価した結果得られる値とK正規形を評価した結果得られる値の評価結果の間に成り立つと期待される関係として，
-\figurename\ref{eqn:knormal-value-relation}の関係$v \rhd v'$を定義する．
+そこで，対象言語の式を評価した結果得られる値と，K正規形を評価した結果得られる値との間に成り立つことが期待される
+\figurename\ref{eqn:knormal-value-relation}の関係$v \rhd v'$を定義する．%
 \begin{figure}
 	\[\begin{array}{rcl}
 		c & \rhd & c \\
@@ -461,35 +495,32 @@ $K(e)\Downarrow K(v)~/~t$は成り立たない．
 	\end{prooftree}
 	\caption{値同士の対応関係}
 	\label{eqn:knormal-value-relation}
-\end{figure}
-これを用いた\lemmaname\ref{lemma:eval-correctness}は一般に成り立ち，
+\end{figure}%
+これを用いた\lemmaname\ref{lemma:eval-correctness}は
 $[0\mapsto e_0,~\cdots , n-1\mapsto e_{n-1}]e$の導出についての帰納法で証明できる．
 \begin{lemma}\label{lemma:eval-correctness}
 	\[[0\mapsto v_0,\cdots , n-1\mapsto v_{n-1}]e\Downarrow v~/~t\]
 	\[\forall i\in \{0,\cdots,n-1\}.~v_i \rhd v_i'\]
 	が成り立つならば，
 	\[[0\mapsto v_0',\cdots , n-1\mapsto v_{n-1}']K(e)\Downarrow v'~/~t\]及び
-	$v\rhd v'$を成り立たせるような$v'$が存在する
+	$v\rhd v'$が成り立つような$v'$が存在する
 \end{lemma}
 ここで$\forall i\in \{0,\cdots,n-1\}.~v_i \rhd v_i'$となるような値$v_i$および$v_i'$を代入してから評価しているのは，
 関数適用や$\LET$のように評価の際に代入が伴う場合でも帰納法の仮定を用いるためである．
-式$e$が関数抽象$\FIX.~e'$の場合には$e'$に値$v_i$が代入されてしまうが，
-この場合であっても関係$v \rhd v'$が成り立つように\figurename\ref{eqn:knormal-value-relation}の定義でも代入を導入している．
+\figurename\ref{eqn:knormal-value-relation}の定義でも代入を導入している理由は，
+式$e$が関数抽象$\FIX.~e'$の場合に$e'$に値$v_i$が代入されても関係$v \rhd v'$が成り立つようにするためである．
 
-プログラムの等価性を証明するためによく用いられる手法の一つにLogical Relation\cite{Pierce:2004:ATT:1076265}が挙げられる．
-これは型が付くような項一般に成り立つものの，いくつかの破壊子では成り立たないような性質を示す手法であり，
-型によって添え字付けされた関係によってステートメントを一般化する事で帰納法が回らなくなる問題を回避している．
-強正規化性や文脈等価性の証明にも用いられるように適用範囲の広い手法であるが，
-再帰関数や副作用を含むような言語では証明が煩雑になる欠点が存在するため，本研究では採用を見送った．
+なお，プログラムの等価性を証明するためによく用いられる手法の一つに論理関係\cite{Pierce:2004:ATT:1076265}が挙げられるが，
+再帰関数を含むような言語や型無しの言語(ないし再帰型を含むような言語)では定義が煩雑になるため，本研究では採用を見送った．
 
-%\section{結論}
-%入出力等の副作用を持つ外部関数の呼び出しや再帰関数，高階関数，組を持つ値呼びの関数型プログラミング言語に対するK正規化を
-%定理証明支援系Coqを用いて形式的に検証できた．
-%様々な手法を比較検討して余帰納的大ステップ操作的意味論とde Bruijnインデックスを採用した結果，
-%証明手法の簡潔さと証明スクリプトの短さをある程度両立できた．
-%
+\section{結論}\label{section:conclusion}
+入出力等の副作用を持つ外部関数の呼び出しや再帰関数，高階関数，組を持つ値呼びの関数型プログラミング言語に対するK正規化を
+定理証明支援系Coqを用いて形式的に検証できた．
+無限の入出力も考慮しつつ様々な手法を比較検討して余帰納的大ステップ操作的意味論とde Bruijnインデックスを採用した結果，
+比較的簡潔な証明が可能となった．
+
 \section*{謝辞}
-本稿を執筆するにあたりコメントを頂いた松田一孝氏(東北大)に感謝する．
+本稿を執筆するにあたりコメントを頂いた松田一孝先生に感謝します．
 
 %% 参考文献: bibtex
 \bibliographystyle{jssst}

@@ -265,7 +265,7 @@ $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表
 De Bruijnインデックスは，内側から数えて何番目の束縛に対応するかにより変数の出現を表現する手法である．
 例えば，名前によって束縛を表現した式$\lambda x.~x (\lambda y.~x~y)$をde Bruijnインデックスで表現すると$\lambda.~0~(\lambda.~1~0)$となる．
 De Bruijnインデックスでは代入の際にシフトと呼ばれる操作が必要になる．
-例えば，$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.~(\lambda y.~z)$に簡約する場合，de Bruijnインデックスでは前者は$\lambda.~(\lambda.\lambda.~1)~0$，後者は$\lambda~(\lambda.~1)$となり，
+例えば，$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.\lambda y.~z$に簡約する場合，de Bruijnインデックスでは前者は$\lambda.~(\lambda.\lambda.~1)~0$，後者は$\lambda.\lambda.~1$となり，
 変数$z$の出現のインデックスが$0$から$1$に増えている．
 このようにインデックスを増やす操作をシフトと呼び，
 一般に式$e$に現れる全ての自由変数のインデックスを$d$ずつ増やした式を$\uparrow^d e$と表す．
@@ -283,9 +283,9 @@ Presburger算術などによりほぼ自動化できる．
 局所名前無し表現\cite{chargueraud-11-ln}は名前による束縛の表現とde Bruijnインデックスの折衷案であり，
 自由変数は名前によって表現し，束縛変数はde Bruijnインデックスによって表現する．
 ただし上述の我々の手法とは異なり，
-例えば先の$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.~(\lambda y.~z)$に簡約する場合，
+例えば先の$\lambda z.~(\lambda x.\lambda y.~x)~z$を$\lambda z.\lambda y.~z$に簡約する場合，
 まず前者の$\lambda z$に対しopenと呼ばれる操作を行い，本体をfreshな$z$に対し$(\lambda .\lambda.~1)~z$と表してから
-$\lambda.~z$に簡約した後，closeと呼ばれる操作を行い$\lambda.~1$を得る．
+$\lambda.~z$に簡約した後，closeと呼ばれる操作を行い$\lambda.\lambda~1$を得る．
 このように局所名前無し表現ではシフト操作が不要になる一方，
 $(\lambda .\lambda.~1)~z$のようにopenされた本体が元の式の部分式にならないため，
 K正規化のような帰納的定義の停止性や，

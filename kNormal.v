@@ -159,90 +159,6 @@ Module Exp.
   Qed.
   Hint Rewrite shift_subst_distr using omega.
 
-  Lemma subst_shift_distr : forall e c d x es,
-    x <= c ->
-    shift c d (subst x es e) =
-    subst x (map (shift (c - x) d) es) (shift (length es + c) d e).
-  Proof.
-    fix 1.
-    intros e ? ? ? ? ?.
-    destruct e; simpl;
-      repeat rewrite subst_shift_distr by omega;
-      repeat (f_equal; try omega).
-    elim_shift_subst_var; auto; try omega;
-      repeat rewrite <- map_nth with (f := shift 0 x);
-      rewrite <- map_nth with (f := shift c d);
-      rewrite map_length.
-    - replace (map (shift c d) (map (shift 0 x) es))
-      with (map (shift 0 x) (map (shift (c - x) d) es)).
-      + destruct (lt_dec (n - x) (length es)).
-        * apply nth_indep.
-          repeat rewrite map_length.
-          omega.
-        * simpl.
-          do 2 f_equal.
-          elim_shift_subst_var; omega.
-      + repeat rewrite map_map.
-        apply map_ext.
-        intros ?.
-        rewrite shift_swap by omega.
-        f_equal.
-        omega.
-    - repeat rewrite nth_overflow by (repeat rewrite map_length; omega).
-      simpl.
-      f_equal.
-      elim_shift_subst_var; omega.
-  Qed.
-
-  Lemma subst_subst_distr : forall e x x' es es',
-    x' <= x ->
-    subst x es (subst x' es' e)
-    = subst x' (map (subst (x - x') es) es') (subst (length es' + x) es e).
-  Proof.
-    fix 1.
-    intros e ? ? ? ? ?.
-    destruct e; simpl;
-      try solve
-        [ eauto
-        | f_equal;
-          rewrite subst_subst_distr by omega;
-          repeat (f_equal; try omega) ].
-    elim_shift_subst_var; eauto; try omega.
-    - rewrite nth_overflow by (repeat rewrite map_length; omega).
-      simpl.
-      rewrite subst_ignore by (try rewrite map_length; omega).
-      rewrite map_length.
-      elim_shift_subst_var; try omega.
-      clear l1.
-      (* repeat (f_equal; try omega) *)
-      f_equal.
-      + omega.
-      + f_equal.
-        * omega.
-        * do 2 f_equal.
-          omega.
-    - clear l0.
-      rewrite map_length.
-      repeat rewrite <- map_nth with (f := shift 0 x').
-      rewrite <- map_nth with (f := subst x es).
-      replace (map (subst x es) (map (shift 0 x') es'))
-        with (map (shift 0 x') (map (subst (x - x') es) es'));
-      repeat rewrite map_map.
-      + destruct (eq_nat_dec x x').
-        * subst.
-          apply nth_indep.
-          rewrite map_length.
-          omega.
-        * f_equal.
-          simpl.
-          elim_shift_subst_var; eauto; omega.
-      + apply map_ext.
-        intros ?.
-        rewrite shift_subst_distr by omega.
-        f_equal.
-        omega.
-  Qed.
-
   Lemma subst_nil : forall x e,
     subst x [] e = e.
   Proof.
@@ -535,20 +451,6 @@ Module KNormal.
     | Fst x => Exp.Fst (Exp.Var x)
     | Snd x => Exp.Snd (Exp.Var x)
     end.
-
-  Lemma toExp_inj : forall e e',
-    toExp e = toExp e' -> e = e'.
-  Proof.
-    intros e.
-    induction e;
-    intros e' HtoExp;
-    destruct e';
-    simpl in *;
-    inversion HtoExp;
-    subst;
-    f_equal;
-    eauto.
-  Qed.
 
   Lemma toExp_shift_commute : forall e c d,
     toExp (shift c d e) = Exp.shift c d (toExp e).

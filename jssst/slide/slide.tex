@@ -22,18 +22,18 @@
 %% ===============================================
 
 %% 発表会の名前とか（省略可）
-\session{平成27年度 卒業研究発表会}
+\session{}
 %% スライドのタイトル
-\title{MinCamlのK正規化の形式的検証}
+\title{無限の入出力を行う関数型プログラムのK正規化の形式的検証}
 %% 必要ならば、サブタイトルも
 %\subtitle{}
 %% 発表者のお名前
-\author{B2TB2512 水野雅之}
+\author{水野雅之　住井英二郎}
 %% 発表者の所属（[] 内は短い名前）
-\institute[東北大学　住井・松田研]{工学部　情報知能システム総合学科\\住井・松田研究室}% 学部生
-%\institute[東北大学　住井・松田研]{大学院情報科学研究科　情報基礎科学専攻\\住井・松田研究室}% 院生
+% \institute[東北大学　住井・松田研]{工学部　情報知能システム総合学科\\住井・松田研究室}% 学部生
+\institute[東北大学　住井・松田研]{東北大学 大学院情報科学研究科}% 院生
 %% 発表する日
-\date{2016年3月11日}
+\date{2016年9月9日}
 
 %% ===============================================
 %% 自動挿入される目次ページの設定（削除しても可）
@@ -109,8 +109,10 @@
 
 \newcommand{\keyword}[1]{\mathbf{#1}}
 \newcommand{\LET}{\keyword{let}}
-\newcommand{\REC}{\keyword{rec}}
-\newcommand{\ARRAY}{\keyword{Array}}
+\newcommand{\IF}{\keyword{if}}
+\newcommand{\THEN}{\keyword{then}}
+\newcommand{\ELSE}{\keyword{else}}
+\newcommand{\FIX}{\keyword{fix}}
 \newcommand{\CREATE}{\keyword{create}}
 \newcommand{\AND}{\keyword{and}}
 \newcommand{\IN}{\keyword{in}}
@@ -126,17 +128,16 @@
 \frame[plain]{\titlepage}% タイトルページ
 
 \begin{frame}
-	\frametitle{研究目的}
-	\LARGE MinCamlの正当性を形式的に検証
+	\frametitle{研究の貢献}
+	\LARGE 入出力を含む関数型言語のK正規化を検証
 	\begin{itemize}
+		\item 無限に入出力が続く場合も検証
+			\begin{itemize}
+				\item 余帰納的大ステップ意味論
+			\end{itemize}
 		\item 証明を簡潔に
 			\begin{itemize}
 				\item de Buijnインデックス
-				\item 余帰納的大ステップ意味論
-			\end{itemize}
-		\item スケーラビリティの確保
-			\begin{itemize}
-				\item 証明自動化機能を活用
 			\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -173,78 +174,39 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}
-	\frametitle{本研究の目標と現状}
-	\Large 目標:MinCamlの正当性を検証
-
-	\vfill
-
-	現状:サブセットのK正規化の正当性を検証
-	\begin{center}
-		\normalsize
-		\begin{tabular}{ll}
-			実装済 & 1引数関数、算術演算、let、if \\
-			未実装 & タプル、複数引数関数、配列、外部関数呼び出し \\
-		\end{tabular}
-	\end{center}
-\end{frame}
-
-\section{MinCaml}
-
-\begin{frame}
-	\frametitle{MinCamlの特徴}
-	\Large 住井による教育用コンパイラ [FDPE 2005]
-	\begin{itemize}
-		\item 非純粋な関数型言語
-		\item OCamlで2000行程度の実装
-			\begin{itemize}
-				\item 型推論
-				\item 定数畳み込み等の最適化
-			\end{itemize}
-	\end{itemize}
-\end{frame}
+\section{対象言語}
 
 \begin{frame}
 	\frametitle{対象言語}
 	\Large
 	\begin{itemize}
 		\item \alert<1>{高階関数}
-		\item \alert<2>{N引数の構文}
-		\item \alert<3>{副作用}
-		\item \alert<4>{外部関数呼び出し(入出力)}
+		\item \alert<2>{複合的な値(組)}
+		\item \alert<3>{外部関数呼び出し(入出力)}
 	\end{itemize}
 	{\normalsize
-	\[
-	\begin{array}{l}
-		M, N ::= \\
-		\qquad \qquad \vdots\\
-		\qquad \alert<1>{\LET~\REC~x~y_1~\cdots~y_n=M~\IN~N}\\
-		\qquad \alert<1,2,4>{M~N_1~\cdots~N_n}\\
-		\qquad \alert<2>{(M_1,~\cdots~,M_n)}\\
-		\qquad \LET~(x_1,~\cdots~,x_n)=M~\IN~N\\
-		\qquad \alert<3>{\ARRAY.\CREATE~M~N}\\
-		\qquad \alert<3>{M_1.(M_2)}\\
-		\qquad \alert<3>{M_1.(M_2)\leftarrow M_3}\\
-	\end{array}
-	\]}
-	\pause
+	\[ \begin{array}{lcl}
+		e & ::= & x	\\
+				& & \vdots \\
+				& | & \alert<1>{\FIX~f~x.~e} \\
+				& | & \alert<1,3>{e_1~e_2} \\
+				& | & \alert<2>{(e_1,~e_2)} \\
+				& | & \alert<2>{\pi_i~e} \\
+			v & ::= & c \\
+				& | & \alert<3>{x} \\
+				& | & \alert<1>{\FIX~f~x.~e} \\
+				& | & \alert<2>{(v_1,~v_2)} \\
+	\end{array} \]}
 	\pause
 	\pause
 \end{frame}
 
 \begin{frame}
-	\frametitle{内部設計}
-	\begin{itemize}
-		\item 様々なコンパイルフェーズ
-		\item 疎結合
-	\end{itemize}
-
-	\begin{figure}[htb]
-		\centering
-		\includegraphics[width=8cm,clip]{mincaml.eps}
-	\end{figure}
-	{\footnotesize \url{http://esumii.github.io/min-caml/index8.html}}
+	\frametitle{外部関数呼び出し}
+	TODO: 外部関数呼び出しの機能について解説
 \end{frame}
+
+\section{K正規化}
 
 \begin{frame}
 	\frametitle{K正規化}
@@ -360,6 +322,11 @@
 \end{frame}
 
 \begin{frame}
+	\frametitle{パラメトリック高階抽象構文}
+	TODO: PHOASについて書く
+\end{frame}
+
+\begin{frame}
 	\frametitle{de Buijnインデックス}
 	\LARGE
 	何番目の束縛かで変数を表現
@@ -398,6 +365,9 @@
 	\[\uparrow^d t \]
 
 	束縛に関する操作
+
+	TODO: 例をレター論文に合わせる
+
 	{\large \begin{columns}
 		\begin{column}{0.5\textwidth}
 			\[ (\lambda x.~x)~(\lambda y.~z) \]
@@ -432,19 +402,14 @@
 	\pause
 \end{frame}
 
+\begin{frame}
+	\frametitle{局所名前無し表現}
+	TODO: 局所名前無し表現について解説
+\end{frame}
+
 \begin{frame}[fragile]
 	\frametitle{K正規化の実装}
-\begin{lstlisting}[basicstyle={\ttfamily\normalsize}]
-Fixpoint knormal e :=
-  match e with
-  | Exp.Var x => K.Var x
-  | Exp.Abs e => K.Abs (knormal e)
-  | Exp.App e1 e2 =>
-      K.Let (knormal e1)
-        (K.Let (shift 1 (knormal e2))
-          (App 1 0))
-  end.
-\end{lstlisting}
+	TODO: レター論文のものに差し替える
 \end{frame}
 
 \section{意味論の定義}
@@ -610,80 +575,6 @@ Fixpoint knormal e :=
 
 \section{正当性の検証}
 
-\begin{frame}[fragile]
-	\frametitle{検証における問題点}
-	\Large 言語拡張のたび全ての証明の修正が必要
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-\begin{lstlisting}[frame=none]
-Inductive t :=
-  | Var : nat -> t
-$\vdots$
-Proof.
-  intros t.
-  induction t.
-  Case "Var".
-\end{lstlisting}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-\begin{lstlisting}[frame=none]
-Inductive t :=
-  @r{| Int : Z -> t}@
-  | Var : nat -> t
-$\vdots$
-Proof.
-  intros t.
-  induction t.
-  @r{Case "Int".}@
-    $\vdots$
-  Case "Var".
-\end{lstlisting}
-		\end{column}
-	\end{columns}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{解決策:Coqの証明自動化機能}
-	\LARGE 構文の違いを自動証明で吸収
-	\begin{center}
-		\footnotesize
-		\begin{itemize}
-			\item $\mathit{tactic}_1;\mathit{tactic}_2$
-			\item $\keyword{solve} [\mathit{tactic}_1 | \cdots | \mathit{tactic}_n]$
-		\end{itemize}
-	\end{center}
-
-	\vfill
-
-\begin{lstlisting}[]
-Lemma shift_0 : forall e c,
-  shift c 0 e = e.
-Proof.
-  intros e.
-  induction e; intros ?; simpl;
-    f_equal;
-    solve [ apply shift_var_0 | eauto ].
-Qed.
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}
-	\frametitle{拡張性の評価}
-	\LARGE プリミティブ、if、letを追加
-	\begin{center}
-		\normalsize
-		\begin{tabular}{l|ll}
-			 & 構文 & 証明の行数 \\
-			\hline
-			拡張前 & 3種類(変数, 匿名関数, 関数適用) & 110 \\
-			拡張後 & 20種類(整数プリミティブ, if, let等) & 141 \\
-		\end{tabular}
-	\end{center}
-
-	\vfill
-
-	{\Large 比較的単純な変更に対してはスケール}
-\end{frame}
 
 \section{結論}
 

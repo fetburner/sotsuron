@@ -310,11 +310,6 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{パラメトリック高階抽象構文}
-	TODO: PHOASについて書く
-\end{frame}
-
-\begin{frame}
 	\frametitle{de Buijnインデックス}
 	\LARGE
 	何番目の束縛かで変数を表現
@@ -390,14 +385,26 @@
 	\pause
 \end{frame}
 
-\begin{frame}[fragile]
-	\frametitle{K正規化の実装}
-	TODO: レター論文のものに差し替える
-\end{frame}
-
 \begin{frame}
 	\frametitle{局所名前無し表現}
 	TODO: 局所名前無し表現について解説
+\end{frame}
+
+\begin{frame}
+	\frametitle{パラメトリック高階抽象構文(PHOAS)}
+	\LARGE
+	ホスト言語の束縛を流用
+	\[\texttt{Abs}~(\texttt{fun}~x \Rightarrow \texttt{Var}~x)\]
+
+	\begin{itemize}
+		\item 名前の付け替えや代入をメタ言語に任せられる
+		\item メタ言語の性質に関する証明が必要になる
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{K正規化の実装}
+	TODO: レター論文のものに差し替える
 \end{frame}
 
 \section{意味論の定義}

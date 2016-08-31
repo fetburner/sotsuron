@@ -22,7 +22,7 @@
 %% ===============================================
 
 %% 発表会の名前とか（省略可）
-\session{}
+\session{日本ソフトウェア科学会第33回大会}
 %% スライドのタイトル
 \title{無限の入出力を行う関数型プログラムのK正規化の形式的検証}
 %% 必要ならば、サブタイトルも
@@ -129,7 +129,8 @@
 
 \begin{frame}
 	\frametitle{研究の貢献}
-	\LARGE 入出力を含む関数型言語のK正規化を検証
+	\LARGE 入出力を含む関数型言語における\\
+	K正規化を検証
 	\begin{itemize}
 		\item 無限に入出力が続く場合も検証
 			\begin{itemize}
@@ -156,21 +157,57 @@
 	\frametitle{コンパイラの形式的検証の意義}
 	\LARGE コンパイラのバグ
 	\begin{itemize}
-		\item 広範囲に影響が及ぶ
+		\item 生成されるコードに影響が及ぶ
 		\item デバッグが困難
 	\end{itemize}
+
+	\vfill
+
+	信頼性の高いソフトウェアには\\信頼性の高いコンパイラが必要
 \end{frame}
 
 \begin{frame}
-	\frametitle{関連研究}
+	\frametitle{関連研究(1/2)}
 	\LARGE CompCert [Leroyら 2006]
 	\begin{itemize}
 		\item Cコンパイラの正当性の検証
+			\begin{itemize}
+				\item 束縛の操作は限定的
+			\end{itemize}
 	\end{itemize}
 
-	[Chlipala 2010]
+	Lambda Tamer [Chlipala 2010]
 	\begin{itemize}
 		\item 非純粋関数型言語処理系の正当性の検証
+			\begin{itemize}
+				\item 入出力はサポートしない
+			\end{itemize}
+	\end{itemize}
+
+	\vfill
+
+	入出力がある関数型言語は少ない
+\end{frame}
+
+\begin{frame}
+	\frametitle{関連研究(2/2)}
+	\LARGE
+	独立に行われた同様の研究
+
+	\vfill
+
+	CakeML [Tanら 2016]
+	\begin{itemize}
+		\item ソース言語は名前で束縛を表現
+		\item 中間言語はde Bruijnインデックス
+		\item クロックを用いた大ステップ意味論
+	\end{itemize}
+
+	Pilsner [Neisら 2015]
+	\begin{itemize}
+		\item 名前で束縛を表現
+		\item 小ステップ意味論
+		\item 論理関係
 	\end{itemize}
 \end{frame}
 
@@ -203,7 +240,20 @@
 
 \begin{frame}
 	\frametitle{外部関数呼び出し}
-	TODO: 外部関数呼び出しの機能について解説
+	\LARGE \alert<2>{自由変数}への関数呼び出し
+
+	\vfill
+
+	\begin{center}
+		\Large
+		$ \alert<2>{\texttt{print\_int}}~42 $
+	\end{center}
+
+	\vfill
+
+	外部関数呼び出しとみなす
+
+	\pause
 \end{frame}
 
 \section{K正規化}
@@ -236,68 +286,6 @@
 
 	\alert<2>{束縛に関する操作}
 	\pause
-\end{frame}
-
-\begin{frame}
-	\frametitle{期待される定理(1/2)}
-	{\LARGE K正規化後の項を評価してみる}
-
-	\vfill
-
-	\Large 単純な値では一致
-	{\normalsize \begin{columns}
-		\begin{column}{0.4\textwidth}
-			\[ 1+2\Downarrow 3 \]
-		\end{column}
-		\begin{column}{0.4\textwidth}
-			\[ 
-				\begin{array}{l}
-					\LET~a = 1~\IN \\
-					\LET~b = 2~\IN \\
-					a + b\Downarrow 3
-				\end{array}
-			\]
-		\end{column}
-	\end{columns}}
-
-	\vfill
-
-	元の値のK正規形と一致
-	{\normalsize \begin{columns}
-		\begin{column}{0.4\textwidth}
-			\[
-				\begin{array}{l}
-					\lambda x.\lambda y.\lambda z.~x+y+z\\
-					\Downarrow \lambda x.\lambda y.\lambda z.~x+y+z
-				\end{array}
-			\]
-		\end{column}
-		\begin{column}{0.4\textwidth}
-			\[ 
-				\begin{array}{l}
-					\lambda x.\lambda y.\lambda z.\\
-					\LET~a = x+y~\IN \\
-					a + z \\
-					\Downarrow \lambda x.\lambda y.\lambda z.\\
-					\LET~a = x+y~\IN \\
-					a + z \\
-				\end{array}
-			\]
-		\end{column}
-	\end{columns}}
-\end{frame}
-
-\begin{frame}
-	\frametitle{期待される定理(2/2)}
-	{\Large
-	\begin{theorem}
-		項tが値vに評価される場合、項tをK正規化した結果K(t)は値vをK正規化した結果K(v)に評価される
-	\end{theorem}
-	\begin{theorem}
-		項tの評価が停止しない場合、項tをK正規化した結果K(t)の評価は停止しない
-	\end{theorem}}
-	\Large 今回検証した言語の範囲では評価は決定的なため、逆も成り立つ
-
 \end{frame}
 
 \section{束縛の表現}
@@ -402,14 +390,14 @@
 	\pause
 \end{frame}
 
-\begin{frame}
-	\frametitle{局所名前無し表現}
-	TODO: 局所名前無し表現について解説
-\end{frame}
-
 \begin{frame}[fragile]
 	\frametitle{K正規化の実装}
 	TODO: レター論文のものに差し替える
+\end{frame}
+
+\begin{frame}
+	\frametitle{局所名前無し表現}
+	TODO: 局所名前無し表現について解説
 \end{frame}
 
 \section{意味論の定義}
@@ -574,6 +562,68 @@
 
 
 \section{正当性の検証}
+
+\begin{frame}
+	\frametitle{期待される性質(1/2)}
+	{\LARGE K正規化後の項を評価してみる}
+
+	\vfill
+
+	\Large 単純な値では一致
+	{\normalsize \begin{columns}
+		\begin{column}{0.4\textwidth}
+			\[ 1+2\Downarrow 3 \]
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			\[ 
+				\begin{array}{l}
+					\LET~a = 1~\IN \\
+					\LET~b = 2~\IN \\
+					a + b\Downarrow 3
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+
+	\vfill
+
+	関数抽象の中は評価されない
+	{\normalsize \begin{columns}
+		\begin{column}{0.4\textwidth}
+			\[
+				\begin{array}{l}
+					\lambda x.\lambda y.\lambda z.~x+y+z\\
+					\Downarrow \lambda x.\lambda y.\lambda z.~x+y+z
+				\end{array}
+			\]
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			\[ 
+				\begin{array}{l}
+					\lambda x.\lambda y.\lambda z.\\
+					\LET~a = x+y~\IN \\
+					a + z \\
+					\Downarrow \lambda x.\lambda y.\lambda z.\\
+					\LET~a = x+y~\IN \\
+					a + z \\
+				\end{array}
+			\]
+		\end{column}
+	\end{columns}}
+\end{frame}
+
+\begin{frame}
+	\frametitle{期待される性質(2/2)}
+	{\Large
+	\begin{theorem}
+		項tが値vに評価される場合、項tをK正規化した結果K(t)は値vをK正規化した結果K(v)に評価される
+	\end{theorem}
+	\begin{theorem}
+		項tの評価が停止しない場合、項tをK正規化した結果K(t)の評価は停止しない
+	\end{theorem}}
+	\Large 今回検証した言語の範囲では評価は決定的なため、逆も成り立つ
+
+\end{frame}
 
 
 \section{結論}

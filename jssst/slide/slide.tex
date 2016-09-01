@@ -349,37 +349,22 @@
 
 	束縛に関する操作
 
-	TODO: 例をレター論文に合わせる
+	\vfill
 
 	{\large \begin{columns}
 		\begin{column}{0.5\textwidth}
-			\[ (\lambda x.~x)~(\lambda y.~z) \]
+			\centering
+			$\begin{array}{l}
+				\lambda z.~(\lambda x.\lambda y.~x)~z \\
+				\rightarrow \lambda z.\lambda y.~z
+			\end{array}$
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\[ (\lambda.~0)~\alert{(\lambda.~1)} \]
-		\end{column}
-	\end{columns}
-
-	\vfill
-
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ 
-					\begin{array}{l}
-						\LET~a = \lambda x.~x~\IN \\
-						\LET~b = \lambda y.~z~\IN \\
-						a~b
-					\end{array}
-			\]
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[
-				\begin{array}{l}
-					\LET~\_ = \lambda.~0~\IN \\
-					\LET~\_ = \alert{\only<1>{\uparrow^1(\lambda.~1)}\only<2->{\lambda.~2}}~\IN \\
-					1~0
-				\end{array}
-			\]
+			\centering
+			$\begin{array}{l}
+				\lambda.~(\lambda.\lambda.~1)~0\\
+				\rightarrow \lambda.\lambda.~\only<2>{\alert{1}}\only<1>{\alert{\uparrow^1 0}}
+			\end{array}$
 		\end{column}
 	\end{columns}}
 	\pause

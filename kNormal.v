@@ -64,6 +64,7 @@ Module Exp.
       eauto.
   Qed.
   Hint Rewrite shift_0.
+  Hint Rewrite <- minus_n_O.
 
   Lemma shift_meld : forall e c c' d d',
     c <= c' <= c + d ->
@@ -468,6 +469,7 @@ Module KNormal.
     f_equal;
     eauto.
   Qed.
+  Hint Rewrite toExp_shift_commute.
 
   Fixpoint knormal e :=
     match e with
@@ -667,8 +669,7 @@ Module KNormal.
     intros ? e ? ? Hdiverge Hlength Henv.
     destruct e;
       simpl in *;
-      [ rewrite Exp.shift_0 in *;
-        rewrite <- minus_n_O in *;
+      [ autorewrite * with core in *;
         destruct (lt_dec n (length vs));
         [ assert (vknormal (nth n vs (Exp.Var (n - length vs))) (nth n kvs (Exp.Var (n - length kvs)))) by
           ( eapply Henv;

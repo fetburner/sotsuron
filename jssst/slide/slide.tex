@@ -373,10 +373,10 @@
 \begin{frame}[fragile]
 	\frametitle{K正規化の実装}
 	\LARGE シフトを用いる
-	{\Large \[\begin{array}{rcl}
+	{\large \[\begin{array}{rcl}
 		K(x) & \equiv & x \\
 		K(\FIX.~e) & \equiv & \FIX.~K(e) \\
-		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ K(e_2)~\IN~1~0 \\
+		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ \uparrow^1 K(e_2)~\IN~1~0 \\
 	\end{array}\]}
 \end{frame}
 
@@ -386,7 +386,13 @@
 	自由変数は名前で表現
 
 	{\Large \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
+
+	\vfill
+
 	\[\texttt{App}~(\texttt{Fix}~(\texttt{App}~(\texttt{ExtVar}~v)~(\texttt{Var}~1)))~(\texttt{Int}~42)\]}
+	{\large \begin{center}
+		($v$は$\texttt{print\_int}$を表す自然数)
+	\end{center}}
 \end{frame}
 
 \begin{frame}

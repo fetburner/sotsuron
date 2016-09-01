@@ -373,10 +373,19 @@
 \begin{frame}[fragile]
 	\frametitle{K正規化の実装}
 	\LARGE シフトを用いる
-	{\large \[\begin{array}{rcl}
-		K(x) & \equiv & x \\
-		K(\FIX.~e) & \equiv & \FIX.~K(e) \\
-		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ \uparrow^1 K(e_2)~\IN~1~0 \\
+
+	\vfill
+
+	{\large \[\begin{array}{l}
+		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) = \\
+		\LET~a=\TRUE~\IN~\IF~a~\THEN~ K(e_1)~\ELSE~ K(e_2)
+	\end{array}\]
+
+	\vfill
+	
+	\[\begin{array}{l}
+		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) = \\
+		\LET~\TRUE~\IN~\IF~0~\THEN~\uparrow^1 K(e_1)~\ELSE~\uparrow^1 K(e_2)
 	\end{array}\]}
 \end{frame}
 
@@ -384,6 +393,8 @@
 	\frametitle{本研究での自由変数の表現}
 	\LARGE
 	自由変数は名前で表現
+
+	\vfill
 
 	{\Large \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
 
@@ -398,10 +409,10 @@
 \begin{frame}
 	\frametitle{局所名前無し表現}
 	\LARGE 自由変数は名前で表現
-	\begin{itemize}
-		\item シフトの代わりにopenとclose
-		\item locally closed
-	\end{itemize}
+
+	\vfill 
+
+	シフトの代わりにopenとclose
 
 	\only<1>{\begin{center}
 		$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1$
@@ -426,6 +437,22 @@
 \end{frame}
 
 \begin{frame}
+	\frametitle{局所名前無し表現の問題点}
+	\LARGE well-formedである証明が必要
+	\begin{itemize}
+		\item locally closed
+	\end{itemize}
+
+	\vfill
+
+	帰納的定義に証明が必要
+	{\large \[\begin{array}{rcl}
+		K(\FIX.~e) & \equiv & \FIX.~{}^{\backslash x}(K(e^x)) \\
+		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~K(e_2)~\IN~1~0 \\
+	\end{array}\]}
+\end{frame}
+
+\begin{frame}
 	\frametitle{パラメトリック高階抽象構文(PHOAS)}
 	\LARGE
 	ホスト言語の束縛を流用
@@ -438,6 +465,30 @@
 \end{frame}
 
 \section{意味論の定義}
+
+\begin{frame}
+	\frametitle{本研究の意味論}
+	\Large
+	大ステップ意味論を入出力の列で拡張
+	\[e \Downarrow v~/~t\]
+
+	\vfill
+
+	{\large \begin{prooftree}
+		\AxiomC{$e_1 \Downarrow \FIX .~e~/~t_1$}
+		\AxiomC{$e_2 \Downarrow v_2~/~t_2$}
+		\noLine
+		\BinaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
+		\RightLabel{\textsc{E-AppFix}}
+		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1~t_2~t_3$}
+	\end{prooftree}
+	\begin{prooftree}
+		\AxiomC{$e_1 \Downarrow x~/~t_1$}
+		\AxiomC{$e_2 \Downarrow n~/~t_2$}
+		\RightLabel{\textsc{E-AppExtVar}}
+		\BinaryInfC{$e_1~e_2 \Downarrow m~/~t_1~t_2~,~x(n)=m$}
+	\end{prooftree}}
+\end{frame}
 
 \begin{frame}
 	\frametitle{大ステップ意味論}

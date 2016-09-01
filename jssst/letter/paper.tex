@@ -344,7 +344,7 @@ PHOASは名前の付け替えや代入をメタ言語に任せることができ
 		K(\LET~ e_1~\IN~e_2) & \equiv & \LET~K(e_1)~\IN~K(e_2) \\ 
 		K(x) & \equiv & x \\
 		K(\FIX.~e) & \equiv & \FIX.~K(e) \\
-		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ K(e_2)~\IN~1~0 \\
+		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~\uparrow^1 K(e_2)~\IN~1~0 \\
 	\end{array}\]
 	\caption{K正規化の実装の一部}
 	\label{eqn:knormalize}

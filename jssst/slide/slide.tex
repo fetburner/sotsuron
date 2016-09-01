@@ -312,16 +312,16 @@
 \begin{frame}
 	\frametitle{de Bruijnインデックス}
 	\LARGE
-	何番目の束縛かで変数を表現
+	何番目の束縛かで変数の出現を表現
 	\begin{itemize}
 		\item 内側から外側へ数える
 	\end{itemize}
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
-			\[ \lambda x. \lambda y. \lambda z.~x z (y z) \]
+			\[ \lambda x.~x~(\lambda y.~x~y) \]
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\[ \lambda. \lambda. \lambda.~2~0~(1~0) \]
+			\[ \lambda.~0~(\lambda.~1~0) \]
 		\end{column}
 	\end{columns}
 
@@ -370,9 +370,53 @@
 	\pause
 \end{frame}
 
+\begin{frame}[fragile]
+	\frametitle{K正規化の実装}
+	\LARGE シフトを用いる
+	{\Large \[\begin{array}{rcl}
+		K(x) & \equiv & x \\
+		K(\FIX.~e) & \equiv & \FIX.~K(e) \\
+		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~ K(e_2)~\IN~1~0 \\
+	\end{array}\]}
+\end{frame}
+
+\begin{frame}
+	\frametitle{本研究での自由変数の表現}
+	\LARGE
+	自由変数は名前で表現
+
+	{\Large \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
+	\[\texttt{App}~(\texttt{Fix}~(\texttt{App}~(\texttt{ExtVar}~v)~(\texttt{Var}~1)))~(\texttt{Int}~42)\]}
+\end{frame}
+
 \begin{frame}
 	\frametitle{局所名前無し表現}
-	TODO: 局所名前無し表現について解説
+	\LARGE 自由変数は名前で表現
+	\begin{itemize}
+		\item シフトの代わりにopenとclose
+		\item locally closed
+	\end{itemize}
+
+	\only<1>{\begin{center}
+		$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1$
+	\end{center}}
+	\only<2>{\begin{prooftree}
+		\AxiomC{$\alert{((\lambda.\lambda.~1)~0)^z} \rightarrow \alert{(\lambda.~1)^z}$}
+		\RightLabel{{\large \textsc{E-Abs}}}
+		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
+	\end{prooftree}}
+	\only<3>{\begin{prooftree}
+		\AxiomC{$\alert{(\lambda.\lambda.~1)~z} \rightarrow \alert{\lambda.~z}$}
+		\RightLabel{{\large \textsc{E-Abs}}}
+		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
+	\end{prooftree}}
+	\only<4>{\begin{prooftree}
+		\AxiomC{}
+		\RightLabel{{\large \textsc{E-AppAbs}}}
+		\UnaryInfC{$(\lambda.\lambda.~1)~z \rightarrow \alert{(\lambda.~1)^z} $}
+		\RightLabel{{\large \textsc{E-Abs}}}
+		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
+	\end{prooftree}}
 \end{frame}
 
 \begin{frame}
@@ -385,11 +429,6 @@
 		\item 名前の付け替えや代入をメタ言語に任せられる
 		\item メタ言語の性質に関する証明が必要になる
 	\end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{K正規化の実装}
-	TODO: レター論文のものに差し替える
 \end{frame}
 
 \section{意味論の定義}

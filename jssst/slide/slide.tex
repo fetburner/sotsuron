@@ -24,7 +24,7 @@
 %% 発表会の名前とか（省略可）
 \session{日本ソフトウェア科学会第33回大会}
 %% スライドのタイトル
-\title{無限の入出力を行う\\関数型プログラムのK正規化の\\形式的検証}
+\title{\underline{無限の入出力}を行う\\ \underline{関数型プログラム}のK正規化の\\形式的検証}
 %% 必要ならば、サブタイトルも
 %\subtitle{}
 %% 発表者のお名前
@@ -127,9 +127,86 @@
 \begin{document}
 \frame[plain]{\titlepage}% タイトルページ
 
+\section*{アウトライン}
+
+% 目次を表示させる（section を表示し、subsection は隠す）
+\begin{frame}
+  \frametitle{アウトライン}
+  \tableofcontents[sectionstyle=show,subsectionstyle=hide]
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景:コンパイラの形式的検証の意義}
+	\begin{columns}
+		\begin{column}{0.6\textwidth}
+			\LARGE コンパイラのバグ
+			\begin{itemize}
+				\item 生成されるコードに影響
+				\item デバッグが困難
+			\end{itemize}
+
+			\vfill
+
+			\begin{center}
+				$\downarrow$
+			\end{center}
+
+			\vfill
+
+			形式的検証が有用
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景:既存研究(1/2)}
+	\LARGE CompCert [Leroy+ 2006]
+	\begin{itemize}
+		\item Cコンパイラの正当性の検証
+			\begin{itemize}
+				\item 高階関数が無い
+			\end{itemize}
+	\end{itemize}
+
+	Lambda Tamer [Chlipala 2010]
+	\begin{itemize}
+		\item 非純粋高階関数型言語処理系の正当性の検証
+			\begin{itemize}
+				\item 入出力はサポートしない
+			\end{itemize}
+	\end{itemize}
+
+	\vfill
+
+	入出力がある高階関数型言語は少ない
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景:関連研究(2/2)}
+	\LARGE
+	同様の研究
+	入出力を含む高階関数型言語を対象
+
+	\vfill
+
+	Pilsner [Neis+ 2015]
+	\begin{itemize}
+		\item 名前で束縛を表現
+		\item 小ステップ意味論
+		\item 論理関係
+	\end{itemize}
+
+	CakeML [Tan+ 2016]
+	\begin{itemize}
+		\item ソース言語の束縛は名前で表現
+		\item 中間言語の束縛はde Bruijnインデックスで表現
+		\item クロックを用いた大ステップ意味論
+	\end{itemize}
+\end{frame}
+
 \begin{frame}
 	\frametitle{研究の貢献}
-	\LARGE 入出力を含む関数型言語における\\
+	\LARGE 入出力を含む高階関数型言語における\\
 	K正規化を検証
 	\begin{itemize}
 		\item 無限に入出力が続く場合も検証
@@ -143,93 +220,22 @@
 	\end{itemize}
 \end{frame}
 
-\section*{アウトライン}
-
-% 目次を表示させる（section を表示し、subsection は隠す）
-\begin{frame}
-  \frametitle{アウトライン}
-  \tableofcontents[sectionstyle=show,subsectionstyle=hide]
-\end{frame}
-
-\section{研究背景}
-
-\begin{frame}
-	\frametitle{コンパイラの形式的検証の意義}
-	\LARGE コンパイラのバグ
-	\begin{itemize}
-		\item 生成されるコードに影響が及ぶ
-		\item デバッグが困難
-	\end{itemize}
-
-	\vfill
-
-	信頼性の高いソフトウェアには\\信頼性の高いコンパイラが必要
-\end{frame}
-
-\begin{frame}
-	\frametitle{関連研究(1/2)}
-	\LARGE CompCert [Leroyら 2006]
-	\begin{itemize}
-		\item Cコンパイラの正当性の検証
-			\begin{itemize}
-				\item 束縛の操作は限定的
-			\end{itemize}
-	\end{itemize}
-
-	Lambda Tamer [Chlipala 2010]
-	\begin{itemize}
-		\item 非純粋関数型言語処理系の正当性の検証
-			\begin{itemize}
-				\item 入出力はサポートしない
-			\end{itemize}
-	\end{itemize}
-
-	\vfill
-
-	入出力がある関数型言語は少ない
-\end{frame}
-
-\begin{frame}
-	\frametitle{関連研究(2/2)}
-	\LARGE
-	独立に行われた同様の研究
-
-	\vfill
-
-	CakeML [Tanら 2016]
-	\begin{itemize}
-		\item ソース言語は名前で束縛を表現
-		\item 中間言語はde Bruijnインデックス
-		\item クロックを用いた大ステップ意味論
-	\end{itemize}
-
-	Pilsner [Neisら 2015]
-	\begin{itemize}
-		\item 名前で束縛を表現
-		\item 小ステップ意味論
-		\item 論理関係
-	\end{itemize}
-\end{frame}
-
 \section{対象言語}
 
 \begin{frame}
 	\frametitle{対象言語}
 	{\normalsize
-	\[ \begin{array}{lcl}
-		e & ::= & c	\\
-				& | & x	\\
-				& | & e_1 \odot e_2 \\
-				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 \\
-				& | & \LET~x=e_1~\IN~e_2 \\
-				& | & \FIX~f~x.~e \\
-				& | & e_1~e_2 \\
-				& | & (e_1,~e_2) \\
-				& | & \pi_i~e \\
-			v & ::= & c \\
-				& | & x \\
-				& | & \FIX~f~x.~e \\
-				& | & (v_1,~v_2) \\
+	\[ \begin{array}{lcll}
+		e & ::= & & \mbox{式} \\
+				& & c	& \mbox{定数} \\
+				& | & e_1 \odot e_2 & \mbox{算術演算} \\
+				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
+				& | & \LET~x=e_1~\IN~e_2 & \mbox{変数定義} \\
+				& | & x & \mbox{変数} \\
+				& | & \FIX~f~x.~e & \mbox{再帰関数} \\
+				& | & e_1~e_2 & \mbox{関数呼び出し} \\
+				& | & (e_1,~e_2) & \mbox{二つ組の作成} \\
+				& | & \pi_i~e & \mbox{射影}(i \in \{0, 1\}) \\
 	\end{array} \]}
 \end{frame}
 
@@ -734,7 +740,7 @@
 
 \begin{frame}
 	\frametitle{結論}
-	\LARGE 入出力を含む関数型言語における\\
+	\LARGE 入出力を含む高階関数型言語における\\
 	K正規化をCoqで検証できた
 	\begin{itemize}
 		\item 無限に入出力が続く場合も検証

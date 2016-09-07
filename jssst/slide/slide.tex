@@ -9,6 +9,12 @@
 \usepackage{bussproofs}
 \usepackage{url}
 \usepackage{etex}
+\usepackage{fancybox}
+\usepackage{newtxmath}
+\usepackage{tikz}
+\usepackage{pxpgfmark}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.callouts}
 
 % スライドのテーマ
 \usetheme{sumiilab}
@@ -24,7 +30,7 @@
 %% 発表会の名前とか（省略可）
 \session{日本ソフトウェア科学会第33回大会}
 %% スライドのタイトル
-\title{\underline{無限の入出力}を行う\\ \underline{関数型プログラム}のK正規化の\\形式的検証}
+\title{無限の入出力を行う\\関数型プログラムのK正規化の\\形式的検証}
 %% 必要ならば、サブタイトルも
 %\subtitle{}
 %% 発表者のお名前
@@ -77,6 +83,7 @@
 \newtheorem{lemma}{補題}
 \newtheorem{corollary}{系}
 \newtheorem{proposition}{命題}
+\newtheorem{hypothesis}{仮説}
 
 %% ===============================================
 %% ソースコードの設定
@@ -128,87 +135,82 @@
 \frame[plain]{\titlepage}% タイトルページ
 
 \begin{frame}
-	\frametitle{背景:コンパイラの形式的検証の意義}
-	\begin{columns}
-		\begin{column}{0.6\textwidth}
-			\LARGE コンパイラのバグ
-			\begin{itemize}
-				\item 生成されるコードに影響
-				\item デバッグが困難
-			\end{itemize}
-
-			\vfill
-
-			\begin{center}
-				$\downarrow$
-			\end{center}
-
-			\vfill
-
-			形式的検証が有用
-		\end{column}
-	\end{columns}
+	\frametitle{背景：コンパイラの形式的検証の意義}
+	\begin{center}
+		\LARGE 
+		\begin{columns}
+			\begin{column}{0.8\textwidth}
+				\begin{itembox}[c]{コンパイラのバグ}
+					\begin{itemize}
+						\item 生成されるコードに影響
+						\item デバッグが困難
+					\end{itemize}
+				\end{itembox}
+			\end{column}
+		\end{columns}
+		$\Downarrow$\\
+		形式的検証が有用
+	\end{center}
 \end{frame}
 
 \begin{frame}
 	\frametitle{背景:既存研究(1/2)}
-	\LARGE CompCert [Leroy+ 2006]
 	\begin{itemize}
-		\item Cコンパイラの正当性の検証
+		\item 高階関数がない
 			\begin{itemize}
-				\item 高階関数が無い
+				\item CompCert [Leroy+ 2006]
+					\begin{itemize}
+						\item Cコンパイラの正当性の検証
+					\end{itemize}
+			\end{itemize}
+		\item 入出力がない
+			\begin{itemize}
+				\item Lambda Tamer [Chlipala 2010]
+					\begin{itemize}
+						\item 非純粋高階関数型言語処理系の\\正当性の検証
+					\end{itemize}
 			\end{itemize}
 	\end{itemize}
-
-	Lambda Tamer [Chlipala 2010]
-	\begin{itemize}
-		\item 非純粋高階関数型言語処理系の正当性の検証
-			\begin{itemize}
-				\item 入出力はサポートしない
-			\end{itemize}
-	\end{itemize}
-
-	\vfill
-
-	入出力がある高階関数型言語は\\
-	少ない
 \end{frame}
 
 \begin{frame}
 	\frametitle{背景:既存研究(2/2)}
-	\Large
-	入出力を含む高階関数型言語を対象
-
-	\vfill
-
-	Pilsner [Neis+ 2015]
 	\begin{itemize}
-		\item ソース言語の束縛は名前で表現
-		\item 小ステップ意味論
-		\item 論理関係
+		\item 高階関数も入出力もある
+			\begin{itemize}
+				\item Pilsner [Neis+ 2015]
+					\begin{itemize}
+						\item ソース言語の束縛は名前で表現
+						\item 小ステップ意味論
+						\item 論理関係
+					\end{itemize}
+				\item CakeML [Tan+ 2016]
+					\begin{itemize}
+						\item ソース言語の束縛は名前で表現
+						\item 中間言語の束縛はde Bruijnインデックスで表現
+						\item クロックを用いた大ステップ意味論
+					\end{itemize}
+			\end{itemize}
 	\end{itemize}
-
-	CakeML [Tan+ 2016]
-	\begin{itemize}
-		\item ソース言語の束縛は名前で表現
-		\item 中間言語の束縛はde Bruijnインデックスで表現
-		\item クロックを用いた大ステップ意味論
-	\end{itemize}
-	後で手法を比較
+	\begin{flushright}
+		\Large $\Rightarrow$後で手法を比較
+	\end{flushright}
 \end{frame}
 
 \begin{frame}
-	\frametitle{研究の詳細}
-	\Large 入出力を含む高階関数型言語処理系を検証
+	\frametitle{本研究の概要}
 	\begin{itemize}
-		\item 検証はK正規化のみ
-		\item 無限に入出力が続く場合も検証
+		\item 入出力を含む\\高階関数型言語処理系を検証
 			\begin{itemize}
-				\item 余帰納的大ステップ意味論
-			\end{itemize}
-		\item 証明を簡潔に
-			\begin{itemize}
+				\item 本研究ではK正規化パスのみを検証
+				\item 余帰納的大ステップ意味論\mbox{[Leroy, Grall 2009]}
+					\begin{itemize}
+						\item 無限に入出力が続く場合の検証が簡潔
+					\end{itemize}
 				\item de Buijnインデックス
+					\begin{itemize}
+						\item 束縛の表現が簡潔
+					\end{itemize}
 			\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -216,12 +218,13 @@
 \begin{frame}
 	\frametitle{K正規化}
 	\LARGE
-	中間言語(K正規形)への変換
-
-	全ての部分式に名前を付ける
+	\begin{itemize}
+		\item 全ての部分式に名前を付ける\\（K正規形への）変換
+	\end{itemize}
 
 	\vfill
 
+	例:
 	\begin{columns}
 		\begin{column}{0.3\textwidth}
 			$a+b*c+d$
@@ -230,18 +233,18 @@
 			$\Rightarrow$
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			$\begin{array}{l}
-				\alert<2>{\LET~x =} b * c~\alert<2>{\IN} \\
-				\alert<2>{\LET~y =} a + x~\alert<2>{\IN} \\
-				y + d
-			\end{array}$
+			\tikz[remember picture]{\node(let-insertion){
+				$\begin{array}{l}
+					\alert<2>{\LET~x =} b * c~\alert<2>{\IN} \\
+					\alert<2>{\LET~y =} a + x~\alert<2>{\IN} \\
+					y + d
+				\end{array}$};}
 		\end{column}
 	\end{columns}
-
-	\vfill
-
-	\alert<2>{束縛が導入される}
 	\pause
+	\begin{tikzpicture}[remember picture, overlay]
+		\node[rectangle callout, fill=red!80, white, callout absolute pointer={(let-insertion.north)}, above=of let-insertion]{束縛が導入される};
+	\end{tikzpicture}
 \end{frame}
 
 \section*{アウトライン}
@@ -255,12 +258,11 @@
 \section{対象言語}
 
 \begin{frame}
-	\frametitle{対象言語}
-	\only<1>{\LARGE 型無しの言語}
-	{\normalsize
+	\frametitle{値呼びの型無し$\lambda$計算の拡張}
+	{\large
 	\[ \begin{array}{lcll}
-		e & ::= & \alert<2>{c} & \alert<2>{\mbox{定数}} \\
-				& | & \alert<3>{e_1 \odot e_2} & \alert<3>{\mbox{算術演算}} \\
+		e & ::= & c & \mbox{定数（整数$\cdot$真偽値）} \\
+				& | & e_1 \odot e_2 & \mbox{算術演算（$+, -, \times, \leq$）} \\
 				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
 				& | & \alert<4>{\LET~x=e_1~\IN~e_2} & \alert<4>{\mbox{変数定義}} \\
 				& | & \alert<5>{x} & \alert<5>{\mbox{変数$\cdot$外部関数}} \\
@@ -270,18 +272,13 @@
 				& | & \pi_i~e & \mbox{射影}(i \in \{0, 1\}) \\
 	\end{array} \]}
 	\Large
-	\only<2>{\alert<2>{整数値と真偽値が存在}}
-	\only<3>{\alert<3>{加算，減算，乗算，比較が存在}
-		\begin{itemize}
-			\item 新しく追加するのも容易
-				\begin{itemize}
-					\item 実行時エラーになりうる除算は問題
-				\end{itemize}
-		\end{itemize}}
 	\only<4>{{\normalsize 型無しのため$(\lambda x.~e_2)~e_1$としても表現できるが}\\
 		\alert<4>{K正規形を表現するために導入}}
 	\only<5>{\alert<5>{自由変数への関数適用}(e.g. $\texttt{print\_int}~42$)\\
-		\alert<5>{は外部関数の呼び出しとみなす}}
+		\alert<5>{は外部関数の呼び出しとみなす}
+		\begin{itemize}
+			\item 入出力は外部関数呼び出しで表現
+		\end{itemize}}
 	\only<6>{{\normalsize 型無しのため不動点コンビネータでも表現できるが}\\
 		\alert<6>{実用されている言語に近付けるために採用}}
 	\only<7>{\alert<7>{n-aryな構文を制限}
@@ -290,7 +287,7 @@
 		\end{itemize}}
 \end{frame}
 
-\section{問題点$\textcircled{\footnotesize 1}$:束縛の表現}
+\section{問題点$\textcircled{\footnotesize 1}$束縛の表現}
 
 \begin{frame}
 	\frametitle{名前による表現の問題点}
@@ -303,12 +300,10 @@
 	\begin{itemize}
 		\item 束縛の関係を乱さないよう変数名を選ぶ
 	\end{itemize}
-	\[
-		\begin{array}{lcl}
-			[x \mapsto z](\lambda z.~x) & \simeq & \lambda z'.~z \\
-																	& \not \simeq & \lambda z.~z
-		\end{array}
-	\]
+	\[\begin{array}{l}
+		K(\lambda z.~x+y+z) \\
+		\not \simeq \lambda z.~\LET~z=x+y~\IN~z+z
+	\end{array}\]
 \end{frame}
 
 \begin{frame}
@@ -351,27 +346,21 @@
 
 \begin{frame}[fragile]
 	\frametitle{de Bruijnインデックスを用いたK正規化の実装}
-	\LARGE シフトを用いる
-
+	{\Large \[K(\lambda z.~x+y+z) = \lambda z.~\LET~a=x+y~\IN~a+z \]
+	\[\Downarrow\]
+	\[ K(\lambda.~2+1+0) = \lambda.~\LET~2+1~\IN~0+\alert{1}\]}
 	\vfill
-
-	{\large \[\begin{array}{l}
-		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) = \\
-		\LET~a=\TRUE~\IN~\IF~a~\THEN~ K(e_1)~\ELSE~ K(e_2)
-	\end{array}\]
-
-	\vfill
-	
-	\[\begin{array}{l}
-		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) = \\
-		\LET~\TRUE~\IN~\IF~0~\THEN~\uparrow^1 K(e_1)~\ELSE~\uparrow^1 K(e_2)
-	\end{array}\]}
+	\begin{center}\LARGE 
+		\alert{インデックスをずらす必要がある}
+		\[\Downarrow\]
+		シフトを用いる
+	\end{center}
 \end{frame}
 
 \begin{frame}
 	\frametitle{シフト}
-	\LARGE 自由変数のインデックスをずらす
-	\[\uparrow^d t \]
+	\LARGE 自由変数のインデックスをずらす\\
+	凡例:$\uparrow^d t$
 	\vfill
 	\[\uparrow^1(0~(\lambda.~0~1)) = 1~(\lambda.~0~2)\]
 	\vfill
@@ -382,47 +371,23 @@
 	\frametitle{本研究での自由変数の表現}
 	\LARGE
 	自由変数は名前で表現
-
 	\vfill
-
-	{\Large \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
-
-	\vfill
-
-	\[\texttt{App}~(\texttt{Fix}~(\texttt{App}~(\texttt{ExtVar}~v)~(\texttt{Var}~1)))~(\texttt{Int}~42)\]}
-	{\large \begin{center}
-		($v$は$\texttt{print\_int}$を表す自然数)
-	\end{center}}
+	{\LARGE \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
+	\[\Downarrow\]
+	\[(\FIX.~\texttt{print\_int}~1)~42\]}
 \end{frame}
 
 \begin{frame}
-	\frametitle{局所名前無し表現}
+	\frametitle{関連研究の例:局所名前無し表現}
 	\LARGE 自由変数は名前で表現
 
 	\vfill 
 
 	シフトの代わりにopenとclose
-
-	\only<1>{\begin{center}
-		$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1$
-	\end{center}}
-	\only<2>{\begin{prooftree}
-		\AxiomC{$\alert{((\lambda.\lambda.~1)~0)^z} \rightarrow \alert{(\lambda.~1)^z}$}
-		\RightLabel{{\large \textsc{E-Abs}}}
-		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
-	\end{prooftree}}
-	\only<3>{\begin{prooftree}
-		\AxiomC{$\alert{(\lambda.\lambda.~1)~z} \rightarrow \alert{\lambda.~z}$}
-		\RightLabel{{\large \textsc{E-Abs}}}
-		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
-	\end{prooftree}}
-	\only<4>{\begin{prooftree}
-		\AxiomC{}
-		\RightLabel{{\large \textsc{E-AppAbs}}}
-		\UnaryInfC{$(\lambda.\lambda.~1)~z \rightarrow \alert{(\lambda.~1)^z} $}
-		\RightLabel{{\large \textsc{E-Abs}}}
-		\UnaryInfC{$\lambda.~(\lambda.\lambda.~1)~0 \rightarrow \lambda.\lambda.~1 $}
-	\end{prooftree}}
+	\[\begin{array}{lcl}
+		\lambda.~e & \xrightarrow{\texttt{open}} & [0 \mapsto z]e \\
+		e & \xrightarrow{\texttt{close}} & \lambda.~[z \mapsto 0]e \\
+	\end{array}\]
 \end{frame}
 
 \begin{frame}
@@ -435,31 +400,33 @@
 	\vfill
 
 	{\large \[\begin{array}{rcl}
-		K(\FIX.~e) & \equiv & \FIX.~{}^{\backslash x}(K(e^x)) \\
 		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~K(e_2)~\IN~1~0 \\
+		K(\lambda.~e) & \equiv & \lambda.~[x\mapsto 0](K([0\mapsto x]e)) \\
 	\end{array}\]}
 	帰納的定義に証明が必要
 \end{frame}
 
 \begin{frame}
-	\frametitle{パラメトリック高階抽象構文(PHOAS)}
+	\frametitle{(パラメトリック)高階抽象構文}
 	\LARGE
 	ホスト言語の束縛を流用
 	\[\texttt{Abs}~(\texttt{fun}~x \Rightarrow \texttt{Var}~x)\]
 
 	\begin{itemize}
 		\item 名前の付け替えや代入をホスト言語に任せられる
-		\item ホスト言語の性質に関する証明が必要になる
+		\item ホスト言語のparametricityの証明が必要
 	\end{itemize}
 \end{frame}
 
-\section{意味論の定義}
+\section{問題点\textcircled{\footnotesize 2}無限の入出力}
 
 \begin{frame}
-	\frametitle{本研究の意味論}
+	\frametitle{問題点\textcircled{\footnotesize 2}無限の入出力:有限の入出力の場合}
 	\Large
 	大ステップ意味論を入出力の列で拡張
-	\[e \Downarrow v~/~t\]
+	\begin{center}
+		凡例:$e \Downarrow v~/~t$
+	\end{center}
 
 	\vfill
 
@@ -469,31 +436,42 @@
 		\noLine
 		\BinaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
 		\RightLabel{\normalsize\textsc{E-AppFix}}
-		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1~t_2~t_3$}
+		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1,~t_2,~t_3$}
 	\end{prooftree}
 	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow x~/~t_1$}
 		\AxiomC{$e_2 \Downarrow n~/~t_2$}
 		\RightLabel{\normalsize\textsc{E-AppExtVar}}
-		\BinaryInfC{$e_1~e_2 \Downarrow m~/~t_1~t_2~,~x(n)=m$}
+		\BinaryInfC{$e_1~e_2 \Downarrow m~/~t_1,~t_2~,~x(n)=m$}
 	\end{prooftree}}
-
-	\vfill
-
-	環境の代わりに代入を用いる
+	入力は非決定的
 \end{frame}
 
 \begin{frame}
-	\frametitle{大ステップ意味論の問題点}
+	\frametitle{代入を用いた理由}
+	\LARGE 環境を用いても意味を定義できる
+	\begin{center}
+		凡例:$\varepsilon \vdash e \Downarrow v~/~t$
+	\end{center}
+	\vfill
+	一方クロージャ同士の比較が面倒
+	{\Large \[\texttt{Closure}(\varepsilon, e) \not = \texttt{Closure}((v, \varepsilon), \uparrow^1_1 e) \]}
+	\vfill
+	代入を用いた場合
+	\[\lambda.~[1\mapsto v, \varepsilon]\uparrow^1_1 e = \lambda.~[1\mapsto\varepsilon]e\]
+\end{frame}
+
+\begin{frame}
+	\frametitle{大ステップ意味論の問題点(1/2)}
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
 			{\LARGE エラー}
-			{\large \[ \neg (\TRUE~\TRUE \Downarrow v~/~t) \]}
+			{\large \[ \TRUE~\TRUE \not \Downarrow v~/~t \]}
 			適用できる規則が無い
 		\end{column}
 		\begin{column}{0.6\textwidth}
 			{\LARGE 無限ループ}
-			{\large \[ \neg ((\FIX.~0~1)~\TRUE \Downarrow v~/~t) \]}
+			{\large \[ (\FIX.~0~1)~\TRUE \not\Downarrow v~/~t \]}
 			有限回の規則適用で導出できない
 		\end{column}
 	\end{columns}
@@ -506,10 +484,32 @@
 \end{frame}
 
 \begin{frame}
+	\frametitle{大ステップ意味論の問題点(2/2)}
+	\LARGE 同じ無限ループでも
+	\vfill
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			{\LARGE 有限回の入出力}
+			{\normalsize \[ (\FIX.~0~1)~(\texttt{print\_int}~\texttt{42}) \not \Downarrow v~/~t \]}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			{\LARGE 無限回の入出力}
+			{\normalsize \[ (\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0} \not\Downarrow v~/~t \]}
+		\end{column}
+	\end{columns}
+	\vfill
+	\begin{center}
+		{\LARGE 区別できない}
+	\end{center}
+\end{frame}
+
+\begin{frame}
 	\frametitle{余帰納的大ステップ意味論(1/3)}
 	\LARGE
 	余帰納的に定義 [Leroy, Grall 2009]
-	{\Large \[e \Uparrow /~t\]}
+	{\Large \begin{center}
+		凡例:$e \Uparrow /~t$
+	\end{center}}
 
 	\vfill
 
@@ -540,7 +540,7 @@
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
 			エラー
-			{\Large \[ \neg (\TRUE~\TRUE \Uparrow / ~t) \]}
+			{\Large \[ \TRUE~\TRUE \not\Uparrow / ~t \]}
 			{\normalsize 適用できる規則がない}
 		\end{column}
 		\begin{column}{0.6\textwidth}
@@ -583,42 +583,58 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{小ステップ意味論の問題点}
+	\frametitle{評価関係の導出例}
+	\tiny
+	\begin{prooftree}
+		\AxiomC{$\vdots$}
+		\AxiomC{$\vdots$}
+		\AxiomC{$\vdots$}
+		\doubleLine
+		\UnaryInfC{$(\FIX.~0~(\texttt{p}~\texttt{42}))~(\texttt{p}~\texttt{42})~/~\texttt{p}(42)=0, \cdots$}
+
+		\doubleLine
+		\TrinaryInfC{$(\FIX.~0~(\texttt{p}~\texttt{42}))~(\texttt{p}~\texttt{42})~/~\texttt{p}(42)=0, \texttt{p}(42)=0, \cdots$}
+	\end{prooftree}
+\end{frame}
+
+\begin{frame}
+	\frametitle{関連研究:ラベル付き小ステップ意味論}
 	\LARGE 
-	{\normalsize \[\texttt{print\_int}~\texttt{42} + 1 \xrightarrow{\texttt{print\_int(42)}=0} 0 + 1 \longrightarrow 1 \]}
+	{\Large \[\texttt{read\_int}~\texttt{0} + 34 \xrightarrow{\texttt{read\_int(0)}=12} 12 + 34 \longrightarrow 45 \]}
 
 	\vfill
 
-	入出力を伴うかの区別が面倒
+	$\tau$遷移の取り扱いが面倒
 	\begin{itemize}
-		\item 弱双模倣
-		\item up-to reduction
+		\item 弱双模倣やup-to reductionが必要
 	\end{itemize}
 \end{frame}
 
 \section{正当性の検証}
 
 \begin{frame}
-	\frametitle{期待される性質(1/2)}
+	\frametitle{K正規化前後の評価の対応(1/2)}
 	{\LARGE K正規化後の項を評価}
 
 	\vfill
 
-	\Large 整数値または真偽値なら一致
+	\Large 整数値または真偽値なら評価結果は一致
+	\begin{itemize}
+		\item 入出力は整数値に限定したため一致
+	\end{itemize}
 	{\normalsize \begin{columns}
 		\begin{column}{0.4\textwidth}
 			\[\begin{array}{l}
-				\texttt{print\_int 42}\Downarrow 0 \\
-				/~\texttt{print\_int}(\texttt{42})=0
+				\texttt{read\_int 0}\Downarrow 42 \\
+				/~\texttt{read\_int}(\texttt{0})=42
 			\end{array}\]
 		\end{column}
 		\begin{column}{0.4\textwidth}
 			\[ 
 				\begin{array}{l}
-					\LET~\texttt{print\_int}~\IN \\
-					\LET~42~\IN \\
-					1 + 0\Downarrow 0 \\
-					/~\texttt{print\_int}(\texttt{42})=0
+					\LET~\texttt{read\_int}~\IN \\
+					\LET~0~\IN~1~0~\Downarrow 42 \\
+					/~\texttt{read\_int}(\texttt{0})=42
 				\end{array}
 			\]
 		\end{column}
@@ -629,51 +645,59 @@
 	関数抽象の中は評価されない
 	{\normalsize \begin{columns}
 		\begin{column}{0.4\textwidth}
-			\[ \begin{array}{l}
-				\lambda.\lambda.\lambda.~2+1+0\\
-				\Downarrow \lambda.\lambda.\lambda.~2+1+0~/
+			\[\begin{array}{l}
+				\lambda.~\texttt{read\_int 0} \Downarrow \\
+				\lambda.~\texttt{read\_int 0}~/
 			\end{array} \]
 		\end{column}
 		\begin{column}{0.6\textwidth}
 			\[ \begin{array}{l}
-				\lambda.\lambda.\lambda.~\LET~2+1~\IN~0 + 1 \\
-				\Downarrow \lambda.\lambda.\lambda.~\LET~2+1~\IN~0 + 1 ~/
+				\lambda.~\LET~\texttt{read\_int}~\IN \\
+				\LET~0~\IN~1~0\Downarrow
+				\lambda.~\LET~\texttt{read\_int}~\IN \\
+				\LET~0~\IN~1~0~/ \\
 			\end{array} \]
 		\end{column}
 	\end{columns}}
 \end{frame}
 
 \begin{frame}
-	\frametitle{期待される性質(2/2)}
+	\frametitle{K正規化前後の評価の対応(2/2)}
 	{\Large
+	以上を定式化すると
 	\begin{theorem}\label{theorem:evalto-correctness}
-		$e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow v'~/~t$が成り立ち，
-		$v$が整数または真偽値ならば$v=v'$となる
+		$e\Downarrow v~/~t$ならば，$K(e)\Downarrow v'~/~t$かつ
+		$v$が整数または真偽値ならば$v=v'$
 	\end{theorem}
 	\begin{theorem}
-		$e\Uparrow/~T$が成り立つならば$K(e)\Uparrow/~t$が成り立つ
+		$e\Uparrow/~T$ならば$K(e)\Uparrow/~t$
 	\end{theorem}}
+	定理2は余帰納法で証明できる
 \end{frame}
 
 \begin{frame}
-	\frametitle{帰納法の仮定の強化 初試行(1/2)}
-	\LARGE 帰納法の仮定を強化する必要がある
+	\frametitle{帰納法の仮定の強化}
+	\LARGE 定理1を証明するには\\帰納法の仮定の強化が必要
 	\vfill
-	\begin{proposition}
-		{\Large $e\Downarrow v~/~t$が成り立つならば$K(e)\Downarrow K(v)~/~t$が成り立つ}
-	\end{proposition}
+	\begin{hypothesis}
+		{\Large $e\Downarrow v~/~t$がならば$K(e)\Downarrow K(v)~/~t$}
+	\end{hypothesis}
 	一見成り立ちそうに見える
 \end{frame}
 
 \begin{frame}
-	\frametitle{帰納法の仮定の強化 初試行(2/2)}
+	\frametitle{仮説1の問題点}
 	\LARGE 複合的な値があるため成り立たない
 
 	\vfill
+	\renewcommand{\thehypothesis}{1}
+	\begin{hypothesis}
+		{\Large $e\Downarrow v~/~t$がならば$K(e)\Downarrow K(v)~/~t$}
+	\end{hypothesis}
 	\Large
 	$v=(v_1,~v_2)$のとき
 	\[K(v)=\LET~v_1~\IN~\LET~\uparrow^1 v_2~\IN~(1,0)\]
-	従って$\neg (K(e)\Downarrow K(v)~/~t)$
+	従って$K(e)\not\Downarrow K(v)~/~t$
 \end{frame}
 
 \begin{frame}
@@ -700,14 +724,15 @@
 	\large
 	\begin{lemma}
 		$[0\mapsto v_0,\cdots , n-1\mapsto v_{n-1}]e\Downarrow v~/~t$かつ\\
-		$\forall i\in \{0,\cdots,n-1\}.~v_i \rhd v_i'$が成り立つならば，
+		$\forall i\in \{0,\cdots,n-1\}.~v_i \rhd v_i'$がならば，
 		\[[0\mapsto v_0',\cdots , n-1\mapsto v_{n-1}']K(e)\Downarrow v'~/~t\]及び
-		$v\rhd v'$が成り立つような$v'$が存在する
+		$v\rhd v'$となる$v'$が存在
 	\end{lemma}
 
 	\begin{itemize}
-		\item 評価関係の導出についての帰納法
-		\item 代入が伴う評価規則に対応
+		\item $[0\mapsto v_0,\cdots , n-1\mapsto v_{n-1}]e\Downarrow v~/~t$の\\
+			導出についての帰納法で証明
+		\item 関数適用や$\LET$の評価で代入が起こる
 	\end{itemize}
 \end{frame}
 
@@ -718,7 +743,7 @@
 		\item 型無しの言語に適用しづらい
 		\item 再帰関数の扱いが面倒
 			\begin{itemize}
-				\item unwinding
+				\item unwindingに関する補題が必要
 			\end{itemize}
 	\end{itemize}
 \end{frame}
@@ -727,8 +752,8 @@
 
 \begin{frame}
 	\frametitle{結論}
-	\LARGE 入出力を含む高階関数型言語における\\
-	K正規化をCoqで検証できた
+	\LARGE 入出力を含む高階関数型言語の\\
+	K正規化をCoqで検証
 	\begin{itemize}
 		\item 無限に入出力が続く場合も検証
 		\item de Bruijnインデックス，\\
@@ -738,20 +763,17 @@
 
 \begin{frame}
 	\frametitle{今後の課題}
-	\LARGE 可変個引数の構文を追加
+	\LARGE n-aryの構文を追加
 	\begin{itemize}
 		\item 複数引数の関数呼び出し
 		\item 相互再帰
 		\item 組
 	\end{itemize}
+	{\large Coqでの取り扱いが面倒なため今回は省略}
 
 	\vfill
 
-	例外を取り扱えるように
-	\begin{itemize}
-		\item 除算
-		\item 配列のアクセス
-	\end{itemize}
+	{\Large 例外や配列のように入出力以外の副作用}
 \end{frame}
 
 \end{document}

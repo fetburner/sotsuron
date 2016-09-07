@@ -127,14 +127,6 @@
 \begin{document}
 \frame[plain]{\titlepage}% タイトルページ
 
-\section*{アウトライン}
-
-% 目次を表示させる（section を表示し、subsection は隠す）
-\begin{frame}
-  \frametitle{アウトライン}
-  \tableofcontents[sectionstyle=show,subsectionstyle=hide]
-\end{frame}
-
 \begin{frame}
 	\frametitle{背景:コンパイラの形式的検証の意義}
 	\begin{columns}
@@ -178,20 +170,20 @@
 
 	\vfill
 
-	入出力がある高階関数型言語は少ない
+	入出力がある高階関数型言語は\\
+	少ない
 \end{frame}
 
 \begin{frame}
-	\frametitle{背景:関連研究(2/2)}
-	\LARGE
-	同様の研究
+	\frametitle{背景:既存研究(2/2)}
+	\Large
 	入出力を含む高階関数型言語を対象
 
 	\vfill
 
 	Pilsner [Neis+ 2015]
 	\begin{itemize}
-		\item 名前で束縛を表現
+		\item ソース言語の束縛は名前で表現
 		\item 小ステップ意味論
 		\item 論理関係
 	\end{itemize}
@@ -202,13 +194,14 @@
 		\item 中間言語の束縛はde Bruijnインデックスで表現
 		\item クロックを用いた大ステップ意味論
 	\end{itemize}
+	後で手法を比較
 \end{frame}
 
 \begin{frame}
-	\frametitle{研究の貢献}
-	\LARGE 入出力を含む高階関数型言語における\\
-	K正規化を検証
+	\frametitle{研究の詳細}
+	\Large 入出力を含む高階関数型言語処理系を検証
 	\begin{itemize}
+		\item 検証はK正規化のみ
 		\item 無限に入出力が続く場合も検証
 			\begin{itemize}
 				\item 余帰納的大ステップ意味論
@@ -220,86 +213,93 @@
 	\end{itemize}
 \end{frame}
 
-\section{対象言語}
-
-\begin{frame}
-	\frametitle{対象言語}
-	{\normalsize
-	\[ \begin{array}{lcll}
-		e & ::= & & \mbox{式} \\
-				& & c	& \mbox{定数} \\
-				& | & e_1 \odot e_2 & \mbox{算術演算} \\
-				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
-				& | & \LET~x=e_1~\IN~e_2 & \mbox{変数定義} \\
-				& | & x & \mbox{変数} \\
-				& | & \FIX~f~x.~e & \mbox{再帰関数} \\
-				& | & e_1~e_2 & \mbox{関数呼び出し} \\
-				& | & (e_1,~e_2) & \mbox{二つ組の作成} \\
-				& | & \pi_i~e & \mbox{射影}(i \in \{0, 1\}) \\
-	\end{array} \]}
-\end{frame}
-
-\begin{frame}
-	\frametitle{外部関数呼び出し}
-	\LARGE \alert{自由変数}への関数呼び出し
-
-	\vfill
-
-	\begin{center}
-		\Large
-		$ \alert{\texttt{print\_int}}~42 $
-	\end{center}
-
-	\vfill
-
-	外部関数呼び出しとみなす
-	\begin{itemize}
-		\item 整数を受け取って整数を返すものに限定
-	\end{itemize}
-\end{frame}
-
-\section{K正規化}
-
 \begin{frame}
 	\frametitle{K正規化}
 	\LARGE
+	中間言語(K正規形)への変換
+
 	全ての部分式に名前を付ける
 
+	\vfill
+
 	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\begin{center}
-				$a+b*c+d$
-			\end{center}
+		\begin{column}{0.3\textwidth}
+			$a+b*c+d$
+		\end{column}
+		\begin{column}{0.1\textwidth}
+			$\Rightarrow$
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			\begin{center}
-				\[
-					\begin{array}{l}
-						\alert<2>{\LET~x =} b * c~\alert<2>{\IN} \\
-						\alert<2>{\LET~y =} a + x~\alert<2>{\IN} \\
-						y + d
-					\end{array}
-				\]
-			\end{center}
+			$\begin{array}{l}
+				\alert<2>{\LET~x =} b * c~\alert<2>{\IN} \\
+				\alert<2>{\LET~y =} a + x~\alert<2>{\IN} \\
+				y + d
+			\end{array}$
 		\end{column}
 	\end{columns}
 
 	\vfill
 
-	\alert<2>{束縛に関する操作}
+	\alert<2>{束縛が導入される}
 	\pause
 \end{frame}
 
-\section{束縛の表現}
+\section*{アウトライン}
+
+% 目次を表示させる（section を表示し、subsection は隠す）
+%\begin{frame}
+%  \frametitle{アウトライン}
+%  \tableofcontents[sectionstyle=show,subsectionstyle=hide]
+%\end{frame}
+
+\section{対象言語}
+
+\begin{frame}
+	\frametitle{対象言語}
+	\only<1>{\LARGE 型無しの言語}
+	{\normalsize
+	\[ \begin{array}{lcll}
+		e & ::= & \alert<2>{c} & \alert<2>{\mbox{定数}} \\
+				& | & \alert<3>{e_1 \odot e_2} & \alert<3>{\mbox{算術演算}} \\
+				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
+				& | & \alert<4>{\LET~x=e_1~\IN~e_2} & \alert<4>{\mbox{変数定義}} \\
+				& | & \alert<5>{x} & \alert<5>{\mbox{変数$\cdot$外部関数}} \\
+				& | & \alert<6, 7>{\FIX~f~x.~e} & \alert<6, 7>{\mbox{再帰関数}} \\
+				& | & \alert<7>{e_1~e_2} & \alert<7>{\mbox{関数呼び出し}} \\
+				& | & \alert<7>{(e_1,~e_2)} & \alert<7>{\mbox{二つ組の作成}} \\
+				& | & \pi_i~e & \mbox{射影}(i \in \{0, 1\}) \\
+	\end{array} \]}
+	\Large
+	\only<2>{\alert<2>{整数値と真偽値が存在}}
+	\only<3>{\alert<3>{加算，減算，乗算，比較が存在}
+		\begin{itemize}
+			\item 新しく追加するのも容易
+				\begin{itemize}
+					\item 実行時エラーになりうる除算は問題
+				\end{itemize}
+		\end{itemize}}
+	\only<4>{{\normalsize 型無しのため$(\lambda x.~e_2)~e_1$としても表現できるが}\\
+		\alert<4>{K正規形を表現するために導入}}
+	\only<5>{\alert<5>{自由変数への関数適用}(e.g. $\texttt{print\_int}~42$)\\
+		\alert<5>{は外部関数の呼び出しとみなす}}
+	\only<6>{{\normalsize 型無しのため不動点コンビネータでも表現できるが}\\
+		\alert<6>{実用されている言語に近付けるために採用}}
+	\only<7>{\alert<7>{n-aryな構文を制限}
+		\begin{itemize}
+			\item 理由は後で述べる
+		\end{itemize}}
+\end{frame}
+
+\section{問題点$\textcircled{\footnotesize 1}$:束縛の表現}
 
 \begin{frame}
 	\frametitle{名前による表現の問題点}
-	\LARGE $\alpha$等価性の議論が面倒
+	\LARGE 項の等価性がCoqの等価性でなく\\$\alpha$等価性となる
 	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
 
 	\vfill
 
-	freshな名前が必要になる
+	捕獲を避ける必要がある
 	\begin{itemize}
 		\item 束縛の関係を乱さないよう変数名を選ぶ
 	\end{itemize}
@@ -312,68 +312,45 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{de Bruijnインデックス}
+	\frametitle{我々の解決策:de Bruijnインデックス}
 	\LARGE
 	何番目の束縛かで変数の出現を表現
 	\begin{itemize}
 		\item 内側から外側へ数える
 	\end{itemize}
 	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda x.~x~(\lambda y.~x~y) \]
+		\begin{column}{0.4\textwidth}
+			$\lambda x.~x~(\lambda y.~x~y)$
 		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda.~0~(\lambda.~1~0) \]
+		\begin{column}{0.1\textwidth}
+			$\Rightarrow$
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			$\lambda.~0~(\lambda.~1~0)$
 		\end{column}
 	\end{columns}
 
 	\vfill
 
-	$\alpha$等価な式は構文的に等価
-	\begin{itemize}
-		\item 名前のfreshnessを保証
-	\end{itemize}
+	$\alpha$等価な式は文面上も同じ
 	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda x.\lambda y.~x \]
-			\[ \lambda a.\lambda b.~a \]
+		\begin{column}{0.4\textwidth}
+			\begin{center}
+				$\lambda x.\lambda y.~x$\\
+				$\lambda a.\lambda b.~a$
+			\end{center}
 		\end{column}
-		\begin{column}{0.5\textwidth}
-			\[ \lambda.\lambda.~1 \]
+		\begin{column}{0.1\textwidth}
+			$\Rightarrow$
+		\end{column}
+		\begin{column}{0.4\textwidth}
+			$\lambda.\lambda.~1$
 		\end{column}
 	\end{columns}
-\end{frame}
-
-\begin{frame}
-	\frametitle{シフト}
-	\LARGE 自由変数のインデックスをずらす
-	\[\uparrow^d t \]
-
-	束縛に関する操作
-
-	\vfill
-
-	{\large \begin{columns}
-		\begin{column}{0.5\textwidth}
-			\centering
-			$\begin{array}{l}
-				\lambda z.~(\lambda x.\lambda y.~x)~z \\
-				\rightarrow \lambda z.\lambda y.~z
-			\end{array}$
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			\centering
-			$\begin{array}{l}
-				\lambda.~(\lambda.\lambda.~1)~0\\
-				\rightarrow \lambda.\lambda.~\only<2>{\alert{1}}\only<1>{\alert{\uparrow^1 0}}
-			\end{array}$
-		\end{column}
-	\end{columns}}
-	\pause
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{K正規化の実装}
+	\frametitle{de Bruijnインデックスを用いたK正規化の実装}
 	\LARGE シフトを用いる
 
 	\vfill
@@ -389,6 +366,16 @@
 		K(\IF~e_1~\THEN~e_2~\ELSE~e_3) = \\
 		\LET~\TRUE~\IN~\IF~0~\THEN~\uparrow^1 K(e_1)~\ELSE~\uparrow^1 K(e_2)
 	\end{array}\]}
+\end{frame}
+
+\begin{frame}
+	\frametitle{シフト}
+	\LARGE 自由変数のインデックスをずらす
+	\[\uparrow^d t \]
+	\vfill
+	\[\uparrow^1(0~(\lambda.~0~1)) = 1~(\lambda.~0~2)\]
+	\vfill
+	束縛に関する操作で必要
 \end{frame}
 
 \begin{frame}
@@ -461,8 +448,8 @@
 	\[\texttt{Abs}~(\texttt{fun}~x \Rightarrow \texttt{Var}~x)\]
 
 	\begin{itemize}
-		\item 名前の付け替えや代入をメタ言語に任せられる
-		\item メタ言語の性質に関する証明が必要になる
+		\item 名前の付け替えや代入をホスト言語に任せられる
+		\item ホスト言語の性質に関する証明が必要になる
 	\end{itemize}
 \end{frame}
 

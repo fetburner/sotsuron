@@ -10,10 +10,12 @@
 \usepackage{url}
 \usepackage{etex}
 \usepackage{fancybox}
+\usepackage[thicklines]{cancel}
 \usepackage{newtxmath}
 \usepackage{tikz}
 \usepackage{pxpgfmark}
 \usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
 \usetikzlibrary{shapes.callouts}
 
 % スライドのテーマ
@@ -30,7 +32,7 @@
 %% 発表会の名前とか（省略可）
 \session{日本ソフトウェア科学会第33回大会}
 %% スライドのタイトル
-\title{無限の入出力を行う\\関数型プログラムのK正規化の\\形式的検証}
+\title{\alert<2>{無限の入出力}を行う\\\alert<2>{関数型プログラム}のK正規化の\\形式的検証}
 %% 必要ならば、サブタイトルも
 %\subtitle{}
 %% 発表者のお名前
@@ -49,7 +51,7 @@
 \AtBeginSection[]{
 \begin{frame}
   \frametitle{アウトライン}
-  \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/show/hide]
+  \tableofcontents[sectionstyle=show/shaded,subsectionstyle=show/hide/hide]
 \end{frame}}
 %% subsection の先頭に自動挿入される目次ページ（削除すると、表示されなくなる）
 \AtBeginSubsection[]{
@@ -203,11 +205,11 @@
 		\item 入出力を含む\\高階関数型言語処理系を検証
 			\begin{itemize}
 				\item 本研究ではK正規化パスのみを検証
-				\item 余帰納的大ステップ意味論\mbox{[Leroy, Grall 2009]}
+				\item 余帰納的大ステップ意味論\mbox{[Leroy, Grall 2009]}を採用
 					\begin{itemize}
 						\item 無限に入出力が続く場合の検証が簡潔
 					\end{itemize}
-				\item de Buijnインデックス
+				\item De Buijnインデックスを採用
 					\begin{itemize}
 						\item 束縛の表現が簡潔
 					\end{itemize}
@@ -242,9 +244,9 @@
 		\end{column}
 	\end{columns}
 	\pause
-	\begin{tikzpicture}[remember picture, overlay]
-		\node[rectangle callout, fill=red!80, white, callout absolute pointer={(let-insertion.north)}, above=of let-insertion]{束縛が導入される};
-	\end{tikzpicture}
+%	\begin{tikzpicture}[remember picture, overlay]
+%		\node[rectangle callout, fill=red!80, white, callout absolute pointer={(let-insertion.north)}, above=of let-insertion]{束縛が導入される};
+%	\end{tikzpicture}
 \end{frame}
 
 \section*{アウトライン}
@@ -264,320 +266,236 @@
 		e & ::= & c & \mbox{定数（整数$\cdot$真偽値）} \\
 				& | & e_1 \odot e_2 & \mbox{算術演算（$+, -, \times, \leq$）} \\
 				& | & \IF~e_1~\THEN~e_2~\ELSE~e_3 & \mbox{条件分岐} \\
-				& | & \alert<4>{\LET~x=e_1~\IN~e_2} & \alert<4>{\mbox{変数定義}} \\
-				& | & \alert<5>{x} & \alert<5>{\mbox{変数$\cdot$外部関数}} \\
-				& | & \alert<6, 7>{\FIX~f~x.~e} & \alert<6, 7>{\mbox{再帰関数}} \\
-				& | & \alert<7>{e_1~e_2} & \alert<7>{\mbox{関数呼び出し}} \\
-				& | & \alert<7>{(e_1,~e_2)} & \alert<7>{\mbox{二つ組の作成}} \\
+				& | & \alert<2>{\LET~x=e_1~\IN~e_2} & \alert<2>{\mbox{変数定義}} \\
+				& | & \alert<3>{x} & \alert<3>{\mbox{変数$\cdot$外部関数}} \\
+				& | & \alert<4>{\FIX~f~x.~e} & \alert<4>{\mbox{再帰関数}} \\
+				& | & e_1~e_2 & \mbox{関数呼び出し} \\
+				& | & (e_1,~e_2) & \mbox{二つ組の作成} \\
 				& | & \pi_i~e & \mbox{射影}(i \in \{0, 1\}) \\
 	\end{array} \]}
 	\Large
-	\only<4>{{\normalsize 型無しのため$(\lambda x.~e_2)~e_1$としても表現できるが}\\
-		\alert<4>{K正規形を表現するために導入}}
-	\only<5>{\alert<5>{自由変数への関数適用}(e.g. $\texttt{print\_int}~42$)\\
-		\alert<5>{は外部関数の呼び出しとみなす}
-		\begin{itemize}
-			\item 入出力は外部関数呼び出しで表現
-		\end{itemize}}
-	\only<6>{{\normalsize 型無しのため不動点コンビネータでも表現できるが}\\
-		\alert<6>{実用されている言語に近付けるために採用}}
-	\only<7>{\alert<7>{n-aryな構文を制限}
-		\begin{itemize}
-			\item 理由は後で述べる
-		\end{itemize}}
+	\only<2>{{\normalsize $(\lambda x.~e_2)~e_1$としても表現できるが}\\
+		\alert<2>{K正規形を容易に表すため導入}}
+	\only<3>{\alert<3>{自由変数の適用}(e.g. $\texttt{print\_int 42}$)\\
+		\alert<3>{で外部関数の呼び出し（入出力）を表現}}
 \end{frame}
 
-\section{問題点$\textcircled{\footnotesize 1}$束縛の表現}
+\section{束縛の表現}
 
 \begin{frame}
 	\frametitle{名前による表現の問題点}
-	\LARGE 項の等価性がCoqの等価性でなく\\$\alpha$等価性となる
-	\[ \lambda x.\lambda y.~x \simeq \lambda a.\lambda b.~a \]
-
-	\vfill
-
-	捕獲を避ける必要がある
 	\begin{itemize}
-		\item 束縛の関係を乱さないよう変数名を選ぶ
+		\item 項の等価性がCoqの等価性でなく\\$\alpha$等価性となる
+			\[ \lambda x.\lambda y.~x \overset{\alpha}{=} \lambda a.\lambda b.~a \]
+		\item captureを避ける必要がある
+			\only<1>{\[\begin{array}{l}
+				K(\alert{\lambda z}.~x+y+\alert{z}) \\
+				\cancel{\overset{\alpha}{=}} \lambda z.~\alert{\LET~z=}x+y~\IN~z+\alert{z}
+			\end{array}\]}
+			\pause
+			\[\begin{array}{l}
+				K(\alert<3>{\lambda z.}~x+y+\alert<3>{z}) \\
+				\overset{\alpha}{=} \alert<3>{\lambda z.}~\alert<2>{\LET~a=}x+y~\alert<2>{\IN~a}+\alert<3>{z}
+			\end{array}\]
 	\end{itemize}
-	\[\begin{array}{l}
-		K(\lambda z.~x+y+z) \\
-		\not \simeq \lambda z.~\LET~z=x+y~\IN~z+z
-	\end{array}\]
 \end{frame}
 
 \begin{frame}
 	\frametitle{我々の解決策:de Bruijnインデックス}
 	\LARGE
-	何番目の束縛かで変数の出現を表現
 	\begin{itemize}
-		\item 内側から外側へ数える
+		\item 内側から数えて何番目の束縛かで表現
+			\begin{columns}
+				\begin{column}{0.025\textwidth}\end{column}
+				\begin{column}{0.4\textwidth}
+					\tikz[remember picture]{\node(binding-by-name3){$\lambda x.~x~(\lambda y.~x~y)$};}
+				\end{column}
+				\begin{column}{0.025\textwidth}\end{column}
+				\begin{column}{0.4\textwidth}
+					\tikz[remember picture]{\node(de-Bruijn2){$\lambda.~0~(\lambda.~1~0)$};}
+				\end{column}
+			\end{columns}
+		\item $\alpha$等価な式は文面上も同じ
+			\begin{columns}
+				\centering
+				\begin{column}{0.4\textwidth}
+					\begin{center}
+						\tikz[remember picture]{\node(binding-by-name1){$\lambda x.\lambda y.~x$};}\\
+						\tikz[remember picture]{\node(binding-by-name2){$\lambda a.\lambda b.~a$};}
+					\end{center}
+				\end{column}
+				\begin{column}{0.4\textwidth}
+					\tikz[remember picture]{\node(de-Bruijn1){$\lambda.\lambda.~1$};}
+				\end{column}
+			\end{columns}
 	\end{itemize}
-	\begin{columns}
-		\begin{column}{0.4\textwidth}
-			$\lambda x.~x~(\lambda y.~x~y)$
-		\end{column}
-		\begin{column}{0.1\textwidth}
-			$\Rightarrow$
-		\end{column}
-		\begin{column}{0.4\textwidth}
-			$\lambda.~0~(\lambda.~1~0)$
-		\end{column}
-	\end{columns}
-
-	\vfill
-
-	$\alpha$等価な式は文面上も同じ
-	\begin{columns}
-		\begin{column}{0.4\textwidth}
-			\begin{center}
-				$\lambda x.\lambda y.~x$\\
-				$\lambda a.\lambda b.~a$
-			\end{center}
-		\end{column}
-		\begin{column}{0.1\textwidth}
-			$\Rightarrow$
-		\end{column}
-		\begin{column}{0.4\textwidth}
-			$\lambda.\lambda.~1$
-		\end{column}
-	\end{columns}
+	\begin{tikzpicture}[remember picture, overlay]
+		\draw[-implies, line width=1pt, double distance=4pt] (binding-by-name1.east) -- (de-Bruijn1.west);
+		\draw[-implies, line width=1pt, double distance=4pt] (binding-by-name2.east) -- (de-Bruijn1.south west);
+		\draw[-implies, line width=1pt, double distance=4pt] (binding-by-name3.east) -- (de-Bruijn2.west);
+	\end{tikzpicture}
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{de Bruijnインデックスを用いたK正規化の実装}
-	{\Large \[K(\lambda z.~x+y+z) = \lambda z.~\LET~a=x+y~\IN~a+z \]
-	\[\Downarrow\]
-	\[ K(\lambda.~2+1+0) = \lambda.~\LET~2+1~\IN~0+\alert{1}\]}
-	\vfill
-	\begin{center}\LARGE 
-		\alert{インデックスをずらす必要がある}
-		\[\Downarrow\]
-		シフトを用いる
-	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{シフト}
-	\LARGE 自由変数のインデックスをずらす\\
-	凡例:$\uparrow^d t$
-	\vfill
-	\[\uparrow^1(0~(\lambda.~0~1)) = 1~(\lambda.~0~2)\]
-	\vfill
-	束縛に関する操作で必要
-\end{frame}
-
-\begin{frame}
-	\frametitle{本研究での自由変数の表現}
-	\LARGE
-	自由変数は名前で表現
-	\vfill
-	{\LARGE \[(\FIX~f~x.~\texttt{print\_int}~x)~42\]
-	\[\Downarrow\]
-	\[(\FIX.~\texttt{print\_int}~1)~42\]}
-\end{frame}
-
-\begin{frame}
-	\frametitle{関連研究の例:局所名前無し表現}
-	\LARGE 自由変数は名前で表現
-
-	\vfill 
-
-	シフトの代わりにopenとclose
-	\[\begin{array}{lcl}
-		\lambda.~e & \xrightarrow{\texttt{open}} & [0 \mapsto z]e \\
-		e & \xrightarrow{\texttt{close}} & \lambda.~[z \mapsto 0]e \\
+	\frametitle{De Bruijnインデックスを用いたK正規化の実装}
+	{\Large \[ \begin{array}{c}
+		K(\alert{\lambda z.}~\texttt{f 42}+\alert{z})\\
+		= \alert{\lambda z.}~\LET~a=\texttt{f 42}~\IN~a+\alert{z}
 	\end{array}\]
-\end{frame}
-
-\begin{frame}
-	\frametitle{局所名前無し表現の問題点}
-	\LARGE well-formedである証明が必要
-	\begin{itemize}
-		\item locally closed
-	\end{itemize}
-
-	\vfill
-
-	{\large \[\begin{array}{rcl}
-		K(e_1~e_2) & \equiv & \LET~ K(e_1)~\IN~\LET~K(e_2)~\IN~1~0 \\
-		K(\lambda.~e) & \equiv & \lambda.~[x\mapsto 0](K([0\mapsto x]e)) \\
+	\[\Downarrow\]
+	\[\begin{array}{c}
+		K(\alert{\lambda.}~\texttt{f 42}+\alert{0})\\
+		= \alert{\lambda.}~\LET~\texttt{f~42}~\IN~0+\alert{1}
 	\end{array}\]}
-	帰納的定義に証明が必要
-\end{frame}
-
-\begin{frame}
-	\frametitle{(パラメトリック)高階抽象構文}
-	\LARGE
-	ホスト言語の束縛を流用
-	\[\texttt{Abs}~(\texttt{fun}~x \Rightarrow \texttt{Var}~x)\]
-
+	\vfill
+	\LARGE 
 	\begin{itemize}
-		\item 名前の付け替えや代入をホスト言語に任せられる
-		\item ホスト言語のparametricityの証明が必要
+		\item \alert{インデックスをずらす必要がある}\\
+		{\large $\Rightarrow$シフト（インデックスをずらす操作）を用いる}
 	\end{itemize}
 \end{frame}
 
-\section{問題点\textcircled{\footnotesize 2}無限の入出力}
+\begin{frame}
+	\LARGE
+	\begin{itemize}
+		\item ただし外部関数は名前で表現
+	\end{itemize}
+	\vfill
+	{\LARGE \[(\FIX~f~\alert{x}.~\texttt{print\_int}~\alert{x})~\texttt{42}\]
+	\[\Downarrow\]
+	\[(\alert{\FIX.}~\texttt{print\_int}~\alert{1})~\texttt{42}\]}
+\end{frame}
+
+\subsection{他手法との比較}
 
 \begin{frame}
-	\frametitle{問題点\textcircled{\footnotesize 2}無限の入出力:有限の入出力の場合}
+	\frametitle{比較:局所名前無し表現 [Gordon 1993]}
+	\begin{itemize}
+		\item 自由変数は名前で表現
+		\item 束縛変数はde Bruijnインデックスで表現
+			{\large \[\begin{array}{rcl}
+				K(e_1~e_2) & = & \LET~ K(e_1)~\IN~\LET~K(e_2)~\IN~1~0 \\
+				K(\lambda.~e) & = & \lambda.~[x\mapsto 0](K([0\mapsto x]e)) \\
+			\end{array}\]}
+			\begin{itemize}
+				\item シフトが不要になる
+				\item $[0\mapsto x]e$が$\lambda.~e$の部分式にならない
+				\item well-formedである証明が必要
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{比較:PHOAS [Chlipala 2008]}
+	\begin{itemize}
+		\item ホスト言語の束縛で\\対象言語の束縛を表現\\
+			$\lambda x.~x \equiv \texttt{Abs}~(\texttt{fun}~x \Rightarrow \texttt{Var}~x)$
+			\begin{itemize}
+				\item 名前の付け替えや代入をホスト言語に任せられる
+				\item parametricityの証明が必要
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\section{無限の入出力}
+
+\begin{frame}
+	\frametitle{有限の入出力の場合}
 	\Large
-	大ステップ意味論を入出力の列で拡張
-	\begin{center}
-		凡例:$e \Downarrow v~/~t$
-	\end{center}
-
-	\vfill
-
+	\fbox{$e \Downarrow v~/~t$}
 	{\large \begin{prooftree}
 		\AxiomC{$e_1 \Downarrow \FIX .~e~/~t_1$}
 		\AxiomC{$e_2 \Downarrow v_2~/~t_2$}
 		\noLine
 		\BinaryInfC{$[0\mapsto \FIX.~e,~1\mapsto v_2]e \Downarrow v~/~t_3$}
-		\RightLabel{\normalsize\textsc{E-AppFix}}
 		\UnaryInfC{$e_1~e_2 \Downarrow v~/~t_1,~t_2,~t_3$}
 	\end{prooftree}
 	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow x~/~t_1$}
 		\AxiomC{$e_2 \Downarrow n~/~t_2$}
-		\RightLabel{\normalsize\textsc{E-AppExtVar}}
 		\BinaryInfC{$e_1~e_2 \Downarrow m~/~t_1,~t_2~,~x(n)=m$}
 	\end{prooftree}}
-	入力は非決定的
+	mは非決定的
 \end{frame}
 
 \begin{frame}
-	\frametitle{代入を用いた理由}
-	\LARGE 環境を用いても意味を定義できる
-	\begin{center}
-		凡例:$\varepsilon \vdash e \Downarrow v~/~t$
-	\end{center}
-	\vfill
-	一方クロージャ同士の比較が面倒
-	{\Large \[\texttt{Closure}(\varepsilon, e) \not = \texttt{Closure}((v, \varepsilon), \uparrow^1_1 e) \]}
-	\vfill
-	代入を用いた場合
-	\[\lambda.~[1\mapsto v, \varepsilon]\uparrow^1_1 e = \lambda.~[1\mapsto\varepsilon]e\]
-\end{frame}
-
-\begin{frame}
-	\frametitle{大ステップ意味論の問題点(1/2)}
-	\begin{columns}
-		\begin{column}{0.4\textwidth}
-			{\LARGE エラー}
-			{\large \[ \TRUE~\TRUE \not \Downarrow v~/~t \]}
-			適用できる規則が無い
-		\end{column}
-		\begin{column}{0.6\textwidth}
-			{\LARGE 無限ループ}
-			{\large \[ (\FIX.~0~1)~\TRUE \not\Downarrow v~/~t \]}
-			有限回の規則適用で導出できない
-		\end{column}
-	\end{columns}
-
-	\vfill
-
-	\begin{center}
-		{\LARGE 区別できない}
-	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{大ステップ意味論の問題点(2/2)}
-	\LARGE 同じ無限ループでも
-	\vfill
-	\begin{columns}
-		\begin{column}{0.5\textwidth}
-			{\LARGE 有限回の入出力}
-			{\normalsize \[ (\FIX.~0~1)~(\texttt{print\_int}~\texttt{42}) \not \Downarrow v~/~t \]}
-		\end{column}
-		\begin{column}{0.5\textwidth}
-			{\LARGE 無限回の入出力}
-			{\normalsize \[ (\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0} \not\Downarrow v~/~t \]}
-		\end{column}
-	\end{columns}
-	\vfill
-	\begin{center}
-		{\LARGE 区別できない}
-	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{余帰納的大ステップ意味論(1/3)}
+	\frametitle{大ステップ意味論の問題点}
 	\LARGE
-	余帰納的に定義 [Leroy, Grall 2009]
-	{\Large \begin{center}
-		凡例:$e \Uparrow /~t$
-	\end{center}}
-
+	\begin{center}
+		同じ無限ループでも
+	\end{center}
 	\vfill
+	\begin{columns}
+		\begin{column}{0.5\textwidth}
+			\begin{itembox}[c]{\Large 有限回の入出力}
+				\normalsize $(\FIX~f~x.~f~x)~(\texttt{print\_int}~\texttt{42})$
+			\end{itembox}
+		\end{column}
+		\begin{column}{0.5\textwidth}
+			\begin{itembox}[c]{\Large 無限回の入出力}
+				\normalsize $(\FIX~f~x.~f~(\texttt{print\_int}~\texttt{42}))~\texttt{0}$
+			\end{itembox}
+		\end{column}
+	\end{columns}
+	\vfill
+	\begin{center}
+		{\LARGE 区別できない}
+	\end{center}
+\end{frame}
 
+\begin{frame}
+	\frametitle{余帰納的大ステップ意味論 [Leroy+ 2009] (1/2)}
+	\LARGE
+	\fbox{$e \Uparrow /~t$}
 	{\large \begin{prooftree}
+		\AxiomC{$e_1 \Uparrow /~t_1$}
+		\doubleLine
+		\UnaryInfC{$e_1~e_2 \Uparrow /~t_1$}
+	\end{prooftree}
+	\vfill
+	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow \FIX.~e~/~t_1$}
 		\AxiomC{$e_2 \Uparrow /~ t_2$}
-		\RightLabel{\normalsize \textsc{D-AppR}}
 		\doubleLine
 		\BinaryInfC{$e_1~e_2 \Uparrow /~t_1~t_2$}
-	\end{prooftree}}
-
+	\end{prooftree}
 	\vfill
-
-	{\large \begin{prooftree}
+	\begin{prooftree}
 		\AxiomC{$e_1 \Downarrow \FIX.~e~/~t_1$}
 		\AxiomC{$e_2 \Downarrow v_2~/~t_2$}
 		\noLine
 		\BinaryInfC{$[0 \mapsto \FIX~e,~1\mapsto v_2]e \Uparrow / ~t_3$}
-		\RightLabel{\normalsize \textsc{D-App}}
 		\doubleLine
 		\UnaryInfC{$e_1~e_2 \Uparrow/~t_1~t_2~t_3$}
 	\end{prooftree}}
 \end{frame}
 
 \begin{frame}
-	\frametitle{余帰納的大ステップ意味論(2/3)}
-	\LARGE
-	\begin{columns}
-		\begin{column}{0.4\textwidth}
-			エラー
-			{\Large \[ \TRUE~\TRUE \not\Uparrow / ~t \]}
-			{\normalsize 適用できる規則がない}
-		\end{column}
-		\begin{column}{0.6\textwidth}
-			無限ループ
-			{\Large \[ (\FIX.~0~1)~\TRUE \Uparrow / \]}
-			{\normalsize 無限回の規則適用を許す}
-		\end{column}
-	\end{columns}
-
-	\vfill
-
+	\frametitle{余帰納的大ステップ意味論 [Leroy+ 2009] (3/3)}
+	\LARGE 
 	\begin{center}
-		区別できる
+		停止しない式同士も区別可能
 	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{余帰納的大ステップ意味論(3/3)}
-	\LARGE 停止しない式同士も区別可能
-
 	\vfill
-
 	\begin{columns}
 		\begin{column}{0.5\textwidth}
-			有限回の入出力
-			{\normalsize \[\begin{array}{l}
-				(\FIX.~0~1)~(\texttt{print\_int}~\texttt{42})\Uparrow / \\
-				\texttt{print\_int}(42)=0
-			\end{array}\]}
+			\begin{itembox}[c]{\Large 有限回の入出力}
+				\normalsize $\begin{array}{l}
+					(\FIX~f~x.~f~x)~(\texttt{print\_int}~\texttt{42}) \\
+					\Uparrow / \texttt{print\_int}(42)=0
+				\end{array}$
+			\end{itembox}
 		\end{column}
 		\begin{column}{0.5\textwidth}
-			無限回の入出力
-			{\normalsize \[\begin{array}{l}
-				(\FIX.~0~(\texttt{print\_int}~\texttt{42}))~\texttt{0} \Uparrow / \\
-				\texttt{print\_int}(42)=0, \\
-				\texttt{print\_int}(42)=0, \cdots
-			\end{array}\]}
+			\begin{itembox}[c]{\Large 無限回の入出力}
+				\normalsize $\begin{array}{l}
+					(\FIX~f~x.~f~(\texttt{print\_int}~\texttt{42}))~\texttt{100} \\
+					\Uparrow / \texttt{print\_int}(42)=0, \\
+					\texttt{print\_int}(42)=0, \\
+					\texttt{print\_int}(42)=0, \\
+					\cdots
+				\end{array}$
+			\end{itembox}
 		\end{column}
 	\end{columns}
 \end{frame}

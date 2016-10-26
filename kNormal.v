@@ -194,7 +194,7 @@ Module Exp.
     | E_App : forall e1 e2 e v2 v l1 l2 l3 l,
         evalto l1 e1 (Fix e) ->
         evalto l2 e2 v2 ->
-        evalto l3 (subst 0 [Fix e; v2] e) v ->
+        evalto l3 (subst 0 [v2; Fix e] e) v ->
         l = l1 ++ l2 ++ l3 ->
         evalto l (App e1 e2) v
     | E_ExtApp : forall e1 e2 x v2 v l1 l2 l,
@@ -278,7 +278,7 @@ Module Exp.
     | D_App : forall e1 e2 e l1 l2 l3 l v2,
         evalto l1 e1 (Fix e) ->
         evalto l2 e2 v2 ->
-        diverge l3 (subst 0 [Fix e; v2] e) ->
+        diverge l3 (subst 0 [v2; Fix e] e) ->
         l = tapp l1 (tapp l2 l3) ->
         diverge l (App e1 e2)
     | D_LetL : forall e1 e2 l1,
@@ -618,9 +618,9 @@ Module KNormal.
     - assert (IHHevalto3' : exists kv,
         Exp.evalto l3
           (Exp.subst 0
-            (Exp.Fix (Exp.subst 2 kvs0 (toExp (knormal e0))) :: H3 :: kvs0)
+            (H3 :: Exp.Fix (Exp.subst 2 kvs0 (toExp (knormal e0))) :: kvs0)
             (toExp (knormal e0))) kv /\ vknormal v kv).
-      + apply IHHevalto3 with (vs := Exp.Fix (Exp.subst 2 vs0 e0) :: v2 :: vs0); simpl; eauto.
+      + apply IHHevalto3 with (vs := v2 :: Exp.Fix (Exp.subst 2 vs0 e0) :: vs0); simpl; eauto.
         * rewrite Exp.subst_meld by (simpl; omega).
           eauto.
         * intros [| []] ? ? Hnth1 Hnth2;
@@ -697,7 +697,7 @@ Module KNormal.
       end; simpl in *; subst); eauto.
     - eapply Exp.D_App; eauto.
       + rewrite Exp.subst_meld in * by (simpl; omega).
-        apply knormal_diverge with (vs := Exp.Fix (Exp.subst 2 vs0 e0) :: v2 :: vs0); simpl in *; eauto.
+        apply knormal_diverge with (vs := v2 :: Exp.Fix (Exp.subst 2 vs0 e0) :: vs0); simpl in *; eauto.
         intros [| []] ? ? ? ?;
         repeat match goal with
         | H : Some _ = Some _ |- _ => inversion H; clear H; subst

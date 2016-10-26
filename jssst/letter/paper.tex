@@ -125,7 +125,7 @@ CakeMLはソース言語では名前によって束縛を表現している一�
 一方，Pilsnerは束縛を名前によって表現しているほか，
 対象言語の意味を定めるために小ステップ操作的意味論を用いており，
 また，正当性の証明には論理関係(logical relation)を用いている．
-これらの手法は\ref{section:bindings}節及び\ref{section:semantics}節で述べる理由により，
+これらの手法は\ref{section:bindings}節および\ref{section:semantics}節で述べる理由により，
 本研究の手法より証明が煩雑になると思われる．
 
 本研究のCoqのソースコードは\url{https://github.com/fetburner/sotsuron/blob/master/kNormal.v}で公開している．
@@ -144,7 +144,7 @@ CakeMLはソース言語では名前によって束縛を表現している一�
 本研究の手法は先行研究で用いられている論理関係と異なり，再帰関数の扱いが容易であることを示すため，再帰関数はプリミティブとしている．
 $\FIX~f~x.~e$の$e$において$f$が現れない場合は関数抽象$\lambda x.~e$に等しい．
 $\LET~x=e_1~\IN~e_2$は$(\lambda x.~e_2)~e_1$で表せるが，K正規形を表すためにプリミティブとしている．
-算術演算としては加算，減算，乗算と比較演算が実装されている(除算を扱うためには対象言語を例外処理で拡張する必要がある)．
+算術演算としては加算，減算，乗算と比較演算が実装されている．
 本研究の対象言語では関数の引数の数や，同時に定義される再帰関数の数，及び組の要素の数を1つか2つに固定している．
 これは式の帰納的定義において，任意個の式を含む構文の扱いがCoqでは困難だったためである．
 
@@ -186,17 +186,17 @@ $e_1+e_2$のK正規形は$\LET~x_1=K(e_1)~\IN~\LET~x_2=K(e_2)~\IN~x_1+x_2$と表
 \figurename\ref{eqn:mincaml-knormal}にK正規形の抽象構文を示す．
 
 \begin{figure}[tp]
-	\[ \begin{array}{ll}
-			k & ::= \\
-				& c \\
-				& x_1 \odot x_2 \\
-				& \IF~x~\THEN~k_1~\ELSE~k_2 \\
-			 	& \LET~x=k_1~\IN~k_2 \\
-				& x \\
-				& \FIX~f~x.~k \\
-				& x~y \\
-				& (x,~y) \\
-				& \pi_i~x 
+	\[ \begin{array}{lcl}
+			k & ::= & \\
+				& & c \\
+				& | & x_1 \odot x_2 \\
+				& | & \IF~x~\THEN~k_1~\ELSE~k_2 \\
+				& | & \LET~x=k_1~\IN~k_2 \\
+				& | & x \\
+				& | & \FIX~f~x.~k \\
+				& | & x~y \\
+				& | & (x,~y) \\
+				& | & \pi_i~x 
 	\end{array} \]
 	\caption{K正規形の抽象構文}
 	\label{eqn:mincaml-knormal}
@@ -230,7 +230,7 @@ Presburger算術などによりほぼ自動化できる．
 ただし上述の我々の手法とは異なり，
 例えば先の$\lambda.~(\lambda.\lambda.~1)~0$を$\lambda.\lambda.~1$に簡約する場合，
 まず前者の$\lambda$抽象に対しopenと呼ばれる操作を行い，本体をfreshな$z$に対し$(\lambda .\lambda.~1)~z$と表してから
-$\lambda.~z$に簡約した後，closeと呼ばれる操作を行い$\lambda.\lambda~1$を得る．
+$\lambda.~z$に簡約した後，closeと呼ばれる操作を行い$\lambda.\lambda.~1$を得る．
 このように局所名前無し表現ではシフト操作が不要になる一方，
 $(\lambda .\lambda.~1)~z$のようにopenされた本体が元の式の部分式にならないため，
 K正規化のような帰納的定義の停止性や，
@@ -389,8 +389,8 @@ K正規後のプログラムはK正規化前のプログラムと値呼びの簡
 \end{wrongproposition}
 実際，2つ組のように複合的な値が存在しなければこの性質は成り立つが，
 本研究の対象言語は2つ組を含むため，反例が存在する．
-例えば$v=(v_1,v_2)$の場合，$K(v)=\LET~v_1~\IN~\LET~\uparrow v_2~\IN~(1,0)$となるが，
-$K(e)\Downarrow K(v)~/~t$を成り立たせる$e$は存在しない．
+例えば$v=(v_1,v_2)$の場合，$K(v)=\LET~v_1~\IN~\LET~\uparrow^1 v_2~\IN~(1,0)$となり，$K(v)$が値にならず，
+$K(e)\Downarrow K(v)~/~t$は成り立たない．
 
 そこで，対象言語の式を評価した結果として得られる値と，K正規形を評価した結果として得られる値との間に成り立つことが期待される
 \figurename\ref{eqn:knormal-value-relation}の関係$v \rhd v'$を定義する．%
